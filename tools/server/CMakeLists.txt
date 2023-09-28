@@ -1,4 +1,3 @@
-
 add_executable(socialserver
   chatserver.cpp
 )
