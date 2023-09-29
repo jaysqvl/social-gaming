@@ -15,12 +15,154 @@
 #include <string>
 #include <unistd.h>
 #include <vector>
+#include <regex>
 #include <functional>
 
 
 using networking::Server;
 using networking::Connection;
 using networking::Message;
+
+struct ClientInfo;
+
+const int NUMBER_ROOMS = 500;
+
+// regex to check for string pattern of "join n"
+const std::regex pattern("^join (\\d+)$"); // Regular expression to match "join n" where n is an int
+
+// array that contains all clients attached to the server as well as the rooms they belong to
+std::vector<ClientInfo> clients;
+
+// array of vector connections for room number. clientRooms[0] are all the clients in room 0.
+// THIS IS CURRENTLY NOT USED - for the future
+std::vector<Connection> clientRooms[NUMBER_ROOMS];
+
+// If room == -1, it means client is not attached to a room
+struct ClientInfo {
+  int room = -1;
+  Connection client;
+  // ---------------- ETHAN EDIT HERE ---------------------
+};
+
+void
+onConnect(Connection c) {
+  std::cout << "New connection found: " << c.id << "\n";
+  clients.push_back({-1, c});
+}
+
+void
+onDisconnect(Connection c) {
+  std::cout << "Connection lost: " << c.id << "\n";
+  // auto eraseBegin = std::remove(std::begin(clients), std::end(clients), c);
+  // clients.erase(eraseBegin, std::end(clients));
+  
+  int it = -1;
+  // find c from clients and remove it
+  for (int i = 0; i < clients.size(); i++){
+    if (clients[i].client == c){
+      it = i;
+    }
+  }
+  if (it == -1){
+    return;
+  }
+  clients.erase(clients.begin() + it);
+
+}
+
+
+
+// This is a batch of all the messages the server collected in a second. the vector contains
+// a pair of messageContent, roomNumber (which room the message should be sent to.)
+struct MessageResult {
+  std::vector<std::pair<std::string, int>> messageVector;
+  bool shouldShutdown;
+};
+
+struct MessageSend {
+  std::string message;
+  int room;
+};
+
+// function that manages a given user joining a room
+bool joinRoom(Connection c, int roomNumber){
+    // update client room in the clients vector
+    for (int i = 0; i < clients.size(); i++){
+      if (clients[i].client == c){
+        clients[i].room = roomNumber;
+        return true;
+      }
+    }
+    return false;
+}
+
+// finds the room that a client is in
+int findRoom(Connection c){
+  for (auto client : clients){
+    if (c == client.client){
+      return client.room;
+    }
+  }
+  return -1;
+}
+
+// This is the function that's called when the server recieves any text messages from the client
+MessageResult
+processMessages(Server& server, const std::deque<Message>& incoming) {
+  std::ostringstream result;
+  bool quit = false;
+
+  // this is to store "n" from "join n"
+  std::smatch matches;
+
+  // vectors for storing messages and room numbers in this batch 
+  std::vector<std::pair<std::string, int>> msgRoom;
+
+  for (const auto& message : incoming) {
+    if (message.text == "quit") {
+      server.disconnect(message.connection);
+    } else if (message.text == "shutdown") {
+      std::cout << "Shutting down.\n";
+      quit = true;
+      // if message is in form "join n", extract "n"
+    } else if (std::regex_search(message.text, matches, pattern)) {
+        int roomInt = std::stoi(matches[1].str());
+        if (roomInt < NUMBER_ROOMS){
+          // assign client to room
+          if (joinRoom(message.connection, roomInt)){
+            std::cout << "Client " << message.connection.id << " joined room " << matches[1].str() << " successfully." << "\n";
+          } else {
+            std::cout << "Client " << message.connection.id << " attempted to join room " << matches[1].str() << "unsuccessfully." << "\n";
+          }
+        }
+    } else {
+      msgRoom.push_back({std::to_string(message.connection.id) + " " + message.text, findRoom(message.connection)});
+    }
+  }
+  
+  // if client belongs to a room, send to those in that room. Else, send it to those not in a room.
+  return MessageResult{msgRoom, quit};
+}
+
+
+std::deque<Message>
+buildOutgoing(const std::vector<std::pair<std::string, int>>& messageRoom) {
+  std::deque<Message> outgoing;
+
+  // TODO - make this more efficient
+  // for each message in the batch, if the client is subscribed to that room number, send it to them 
+  for (auto msg : messageRoom){
+    for (auto client : clients) {
+      auto [message, room] = msg;
+      
+      if (client.room == room){
+        outgoing.push_back({client.client, message});
+      }
+    }
+  }
+  return outgoing;
+}
+
 
 std::string
 getHTTPMessage(const char* htmlLocation) {
@@ -63,13 +205,9 @@ main(int argc, char* argv[]) {
     }
 
     const auto incoming = server.receive();
-    std::deque<std::string> outgoingStrings;
-    gm.processMessages(server, outgoingStrings, incoming);
-    std::deque<Message> outgoingMessages;
-    for (auto &log : outgoingStrings) {
-      gm.buildOutgoing(outgoingMessages, log);
-    }
-    server.send(outgoingMessages);
+    const auto [msgResult, shouldQuit] = processMessages(server, incoming);
+    const auto outgoing = buildOutgoing(msgResult);
+    server.send(outgoing);
 
     if (gm.shouldQuit() || errorWhileUpdating) {
       break;
