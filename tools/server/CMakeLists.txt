@@ -13,6 +13,7 @@ find_package(Threads REQUIRED)
 
 target_link_libraries(socialserver
   networking
+  manager
   ${CMAKE_THREAD_LIBS_INIT}
 )
 
