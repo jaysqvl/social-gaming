@@ -7,6 +7,7 @@
 
 
 #include "Server.h"
+#include "GeneralManager.hpp"
 
 #include <fstream>
 #include <iostream>
@@ -14,64 +15,12 @@
 #include <string>
 #include <unistd.h>
 #include <vector>
+#include <functional>
 
 
 using networking::Server;
 using networking::Connection;
 using networking::Message;
-
-
-std::vector<Connection> clients;
-
-
-void
-onConnect(Connection c) {
-  std::cout << "New connection found: " << c.id << "\n";
-  clients.push_back(c);
-}
-
-
-void
-onDisconnect(Connection c) {
-  std::cout << "Connection lost: " << c.id << "\n";
-  auto eraseBegin = std::remove(std::begin(clients), std::end(clients), c);
-  clients.erase(eraseBegin, std::end(clients));
-}
-
-
-struct MessageResult {
-  std::string result;
-  bool shouldShutdown;
-};
-
-
-MessageResult
-processMessages(Server& server, const std::deque<Message>& incoming) {
-  std::ostringstream result;
-  bool quit = false;
-  for (const auto& message : incoming) {
-    if (message.text == "quit") {
-      server.disconnect(message.connection);
-    } else if (message.text == "shutdown") {
-      std::cout << "Shutting down.\n";
-      quit = true;
-    } else {
-      result << message.connection.id << "> " << message.text << "\n";
-    }
-  }
-  return MessageResult{result.str(), quit};
-}
-
-
-std::deque<Message>
-buildOutgoing(const std::string& log) {
-  std::deque<Message> outgoing;
-  for (auto client : clients) {
-    outgoing.push_back({client, log});
-  }
-  return outgoing;
-}
-
 
 std::string
 getHTTPMessage(const char* htmlLocation) {
@@ -97,9 +46,13 @@ main(int argc, char* argv[]) {
   }
 
   const unsigned short port = std::stoi(argv[1]);
-  Server server{port, getHTTPMessage(argv[2]), onConnect, onDisconnect};
+  GeneralManager gm;
+  Server server{port, getHTTPMessage(argv[2]),
+    std::bind(&GeneralManager::onConnect, &gm, std::placeholders::_1),
+    std::bind(&GeneralManager::onDisconnect, &gm, std::placeholders::_1)
+  };
 
-  while (true) {
+  for (;;) {
     bool errorWhileUpdating = false;
     try {
       server.update();
@@ -110,11 +63,15 @@ main(int argc, char* argv[]) {
     }
 
     const auto incoming = server.receive();
-    const auto [log, shouldQuit] = processMessages(server, incoming);
-    const auto outgoing = buildOutgoing(log);
-    server.send(outgoing);
+    std::deque<std::string> outgoingStrings;
+    gm.processMessages(server, outgoingStrings, incoming);
+    std::deque<Message> outgoingMessages;
+    for (auto &log : outgoingStrings) {
+      gm.buildOutgoing(outgoingMessages, log);
+    }
+    server.send(outgoingMessages);
 
-    if (shouldQuit || errorWhileUpdating) {
+    if (gm.shouldQuit() || errorWhileUpdating) {
       break;
     }
 
