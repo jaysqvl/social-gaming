@@ -16,6 +16,7 @@
 #include <unistd.h>
 #include <vector>
 #include <regex>
+#include <map>
 #include <functional>
 
 
@@ -36,6 +37,8 @@ std::vector<ClientInfo> clients;
 // array of vector connections for room number. clientRooms[0] are all the clients in room 0.
 // THIS IS CURRENTLY NOT USED - for the future
 std::vector<Connection> clientRooms[NUMBER_ROOMS];
+
+std::map<int, std::string> mapUsernames;
 
 // If room == -1, it means client is not attached to a room
 struct ClientInfo {
@@ -137,10 +140,18 @@ processMessages(Server& server, const std::deque<Message>& incoming) {
         }
     } else if (message.text.find("changename:") == 0) {
       size_t posOfColon = message.text.find(':');
-      std::string usernameFromInput = message.text.substr(posOfColon);
+      std::string usernameFromInput = message.text.substr(posOfColon + 2);
       std::cout << "client name: " << usernameFromInput << std::endl;
+      mapUsernames.insert({message.connection.id, usernameFromInput});
+      for (auto c : clients) {
+        if (c.client.id == message.connection.id) {
+          c.username = usernameFromInput;
+        } 
+      }
     } else {
-      msgRoom.push_back({std::to_string(message.connection.id) + " " + message.text, findRoom(message.connection)});
+      std::string username = mapUsernames.find(message.connection.id)->second; 
+      std::cout << "username is " << username << std::endl;
+      msgRoom.push_back({mapUsernames.find(message.connection.id)->second + ": " + message.text, findRoom(message.connection)});
     }
   }
   
