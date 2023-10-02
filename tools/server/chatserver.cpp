@@ -38,13 +38,13 @@ std::vector<Connection> clientRooms[NUMBER_ROOMS];
 struct ClientInfo {
   int room = -1;
   Connection client;
-  // ---------------- ETHAN EDIT HERE ---------------------
+  std::string username;
 };
 
 void
 onConnect(Connection c) {
   std::cout << "New connection found: " << c.id << "\n";
-  clients.push_back({-1, c});
+  clients.push_back({-1, c, "joe"});
 }
 
 void
@@ -132,6 +132,10 @@ processMessages(Server& server, const std::deque<Message>& incoming) {
             std::cout << "Client " << message.connection.id << " attempted to join room " << matches[1].str() << "unsuccessfully." << "\n";
           }
         }
+    } else if (message.text.find("changename:") == 0) {
+      size_t posOfColon = message.text.find(':');
+      std::string usernameFromInput = message.text.substr(posOfColon);
+      std::cout << "client name: " << usernameFromInput << std::endl;
     } else {
       msgRoom.push_back({std::to_string(message.connection.id) + " " + message.text, findRoom(message.connection)});
     }
