@@ -38,6 +38,7 @@ std::vector<ClientInfo> clients;
 // THIS IS CURRENTLY NOT USED - for the future
 std::vector<Connection> clientRooms[NUMBER_ROOMS];
 
+// map that links connection ids from users to their names for easy identification
 std::map<int, std::string> mapUsernames;
 
 // If room == -1, it means client is not attached to a room
@@ -50,7 +51,7 @@ struct ClientInfo {
 void
 onConnect(Connection c) {
   std::cout << "New connection found: " << c.id << "\n";
-  clients.push_back({-1, c, "joe"});
+  clients.push_back({-1, c, std::to_string(c.id)});
 }
 
 void
@@ -141,16 +142,18 @@ processMessages(Server& server, const std::deque<Message>& incoming) {
     } else if (message.text.find("changename:") == 0) {
       size_t posOfColon = message.text.find(':');
       std::string usernameFromInput = message.text.substr(posOfColon + 2);
-      std::cout << "client name: " << usernameFromInput << std::endl;
+      std::cout << "Client name: " << usernameFromInput << std::endl;
       mapUsernames.insert({message.connection.id, usernameFromInput});
+      std::string username = mapUsernames.find(message.connection.id)->second; 
+      std::cout << username << " was assigned to connection id " << message.connection.id << std::endl;
+      //assigns the username to the ClientInfo vector after inserting into map
       for (auto c : clients) {
         if (c.client.id == message.connection.id) {
           c.username = usernameFromInput;
+          break;
         } 
       }
     } else {
-      std::string username = mapUsernames.find(message.connection.id)->second; 
-      std::cout << "username is " << username << std::endl;
       msgRoom.push_back({mapUsernames.find(message.connection.id)->second + ": " + message.text, findRoom(message.connection)});
     }
   }
