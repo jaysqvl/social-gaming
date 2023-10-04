@@ -65,6 +65,7 @@ struct ClientInfo {
   int room = -1;
   Connection client;
   std::string username;
+  bool isPlayer = false;
 };
 
 void
@@ -172,7 +173,20 @@ processMessages(Server& server, const std::deque<Message>& incoming) {
           break;
         } 
       }
-    } else {
+    } else if(message.text.find("setIsPlayer:") == 0) {
+        std::string isPlayer = message.text.substr(message.text.find(":") + 2);
+        std::cout << "Is user player? : " << isPlayer << std::endl;
+
+        for (auto c : clients) {
+          if (c.client.id == message.connection.id) {
+              c.isPlayer = isPlayer.compare("true") ? true : false;
+          } 
+        }
+    }
+    
+    else {
+      std::string username = mapUsernames.find(message.connection.id)->second; 
+      std::cout << "username is " << username << std::endl;
       msgRoom.push_back({mapUsernames.find(message.connection.id)->second + ": " + message.text, findRoom(message.connection)});
     }
   }
