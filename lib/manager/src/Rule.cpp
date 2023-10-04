@@ -1,6 +1,6 @@
 include "Rule.hpp"
 
-RuleStatus For::execute(std::map<std::string, ElementPtr> gameState) {'
+RuleStatus For::execute(std::map<std::string, ElementPtr> gameState) {
 	std::map<std::string, ElementPtr> currentGameState = gameState;
 	for (auto element : list) {
 		for (auto rule : subRules) {
