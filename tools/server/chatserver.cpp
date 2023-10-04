@@ -8,22 +8,41 @@
 
 #include "Server.h"
 #include "GeneralManager.hpp"
-
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <unistd.h>
 #include <vector>
-#include <regex>
-#include <map>
-#include <functional>
 
 
 using networking::Server;
 using networking::Connection;
 using networking::Message;
 
+struct ClientInfo;
+
+const int NUMBER_ROOMS = 500;
+
+// regex to check for string pattern of "join n"
+const std::regex pattern("^join (\\d+)$"); // Regular expression to match "join n" where n is an int
+
+// array that contains all clients attached to the server as well as the rooms they belong to
+std::vector<ClientInfo> clients;
+
+// array of vector connections for room number. clientRooms[0] are all the clients in room 0.
+// THIS IS CURRENTLY NOT USED - for the future
+std::vector<Connection> clientRooms[NUMBER_ROOMS];
+
+// map that links connection ids from users to their names for easy identification
+std::map<int, std::string> mapUsernames;
+
+// If room == -1, it means client is not attached to a room
+struct ClientInfo {
+  int room = -1;
+  Connection client;
+  std::string username;
+};
 struct ClientInfo;
 
 const int NUMBER_ROOMS = 500;
