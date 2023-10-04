@@ -1,1 +1,2 @@
 add_subdirectory(web-socket-networking)
+add_subdirectory(manager)
