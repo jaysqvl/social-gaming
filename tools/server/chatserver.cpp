@@ -7,14 +7,13 @@
 
 
 #include "Server.h"
+#include "GeneralManager.hpp"
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <unistd.h>
 #include <vector>
-#include <regex>
-#include <map>
 
 
 using networking::Server;
@@ -35,6 +34,30 @@ std::vector<ClientInfo> clients;
 // THIS IS CURRENTLY NOT USED - for the future
 std::vector<Connection> clientRooms[NUMBER_ROOMS];
 
+// map that links connection ids from users to their names for easy identification
+std::map<int, std::string> mapUsernames;
+
+// If room == -1, it means client is not attached to a room
+struct ClientInfo {
+  int room = -1;
+  Connection client;
+  std::string username;
+};
+struct ClientInfo;
+
+const int NUMBER_ROOMS = 500;
+
+// regex to check for string pattern of "join n"
+const std::regex pattern("^join (\\d+)$"); // Regular expression to match "join n" where n is an int
+
+// array that contains all clients attached to the server as well as the rooms they belong to
+std::vector<ClientInfo> clients;
+
+// array of vector connections for room number. clientRooms[0] are all the clients in room 0.
+// THIS IS CURRENTLY NOT USED - for the future
+std::vector<Connection> clientRooms[NUMBER_ROOMS];
+
+// map that links connection ids from users to their names for easy identification
 std::map<int, std::string> mapUsernames;
 
 // If room == -1, it means client is not attached to a room
@@ -48,7 +71,7 @@ struct ClientInfo {
 void
 onConnect(Connection c) {
   std::cout << "New connection found: " << c.id << "\n";
-  clients.push_back({-1, c, "joe"});
+  clients.push_back({-1, c, std::to_string(c.id)});
 }
 
 void
@@ -139,11 +162,15 @@ processMessages(Server& server, const std::deque<Message>& incoming) {
     } else if (message.text.find("changename:") == 0) {
       size_t posOfColon = message.text.find(':');
       std::string usernameFromInput = message.text.substr(posOfColon + 2);
-      std::cout << "client name: " << usernameFromInput << std::endl;
+      std::cout << "Client name: " << usernameFromInput << std::endl;
       mapUsernames.insert({message.connection.id, usernameFromInput});
+      std::string username = mapUsernames.find(message.connection.id)->second; 
+      std::cout << username << " was assigned to connection id " << message.connection.id << std::endl;
+      //assigns the username to the ClientInfo vector after inserting into map
       for (auto c : clients) {
         if (c.client.id == message.connection.id) {
           c.username = usernameFromInput;
+          break;
         } 
       }
     } else if(message.text.find("setIsPlayer:") == 0) {
@@ -212,9 +239,13 @@ main(int argc, char* argv[]) {
   }
 
   const unsigned short port = std::stoi(argv[1]);
-  Server server{port, getHTTPMessage(argv[2]), onConnect, onDisconnect};
+  GeneralManager gm;
+  Server server{port, getHTTPMessage(argv[2]),
+    std::bind(&GeneralManager::onConnect, &gm, std::placeholders::_1),
+    std::bind(&GeneralManager::onDisconnect, &gm, std::placeholders::_1)
+  };
 
-  while (true) {
+  for (;;) {
     bool errorWhileUpdating = false;
     try {
       server.update();
@@ -229,7 +260,7 @@ main(int argc, char* argv[]) {
     const auto outgoing = buildOutgoing(msgResult);
     server.send(outgoing);
 
-    if (shouldQuit || errorWhileUpdating) {
+    if (gm.shouldQuit() || errorWhileUpdating) {
       break;
     }
 
