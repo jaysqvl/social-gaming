@@ -68,7 +68,7 @@ RuleStatus ParallelFor::execute(std::map<std::string, ElementPtr> gameState) {
 			return p.second == RuleStatus::WAITING;
 		});
 		if (incompleteIter == currentStatusMap.end())
-			running = true;
+			running = false;
 	}
 	this->setStatus(RuleStatus::DONE);
 	return this->getStatus();
