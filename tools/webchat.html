@@ -80,7 +80,7 @@
           document.getElementById("send").disabled = true;
         };
         ws.onmessage = function(ev) {
-          appendText(ev.data + "\n");
+          appendText(ev.data + "\n"); 
         };
         ws.onclose = function(ev) {
           appendText("Disconnected!\n");
