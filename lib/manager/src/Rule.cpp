@@ -1,4 +1,4 @@
-include "Rule.hpp"
+#include "Rule.hpp"
 
 RuleStatus For::execute(std::map<std::string, ElementPtr> gameState) {
 	std::map<std::string, ElementPtr> currentGameState = gameState;

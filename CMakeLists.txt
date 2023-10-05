@@ -17,5 +17,8 @@ add_grammar_from_repo(tree-sitter-socialgaming
   0.0.1
 )
 
+enable_testing()
+
 add_subdirectory(lib)
 add_subdirectory(tools)
+add_subdirectory(tests)
