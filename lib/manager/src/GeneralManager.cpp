@@ -3,6 +3,8 @@
 #include <iostream>
 #include <sstream>
 
+// This function extracts the first line from a string and returns it as a string_view.
+// It searches for the first line break ('\n') character and returns the substring up to that point.
 std::string_view FirstLine(const std::string_view &text) {
     size_t lineBreak = 0;
     while (lineBreak < text.size() && text[lineBreak] != '\n') {
@@ -11,6 +13,8 @@ std::string_view FirstLine(const std::string_view &text) {
     return text.substr(0, lineBreak);
 }
 
+// This function parses a command from a string_view and stores its elements in a vector.
+// It splits the input text by spaces and stores the resulting substrings in the 'elems' vector.
 void ParseCommand(std::vector<std::string_view> &elems,
         const std::string_view &text) {
     size_t start = 1;
@@ -24,14 +28,17 @@ void ParseCommand(std::vector<std::string_view> &elems,
     }
 }
 
+// Constructor for the GeneralManager class.
 GeneralManager::GeneralManager(void) :
     clients{}, info{}, quit{false} {}
 
+// This function is called when a new client connects to the server.
 void GeneralManager::onConnect(Connection conn) {
     std::cout << "GeneralManager::Connect " << conn.id << std::endl;
     clients.push_back(conn);
 }
 
+// This function is called when a client disconnects from the server.
 void GeneralManager::onDisconnect(Connection conn) {
     std::cout << "GeneralManager::Disconnect " << conn.id << std::endl;
     auto eraseBegin = std::remove(
@@ -44,6 +51,8 @@ void GeneralManager::onDisconnect(Connection conn) {
     }
 }
 
+// This function processes incoming messages from clients.
+// It checks for commands and processes them or forwards regular messages to other clients.
 void GeneralManager::processMessages(Server &server,
         std::deque<Message> &outgoing,
         const std::deque<Message>& incoming) {
@@ -90,6 +99,7 @@ void GeneralManager::processMessages(Server &server,
     }
 }
 
+// This function builds outgoing messages for clients in the same room as the sender.
 void GeneralManager::buildOutgoing(
         std::deque<Message> &outgoing,
         const Message &message) {
@@ -101,6 +111,7 @@ void GeneralManager::buildOutgoing(
     }
 }
 
+// This function returns the value of the 'quit' member variable, indicating whether the server should quit.
 bool GeneralManager::shouldQuit(void) {
     return quit;
 }
