@@ -1,10 +1,8 @@
 add_library(manager
   src/GeneralManager.cpp
-  src/Player.cpp
-  src/Spectator.cpp
+  src/Element.cpp
+  src/User.cpp
 )
-
-find_package(nlohmann_json REQUIRED)
 
 target_include_directories(manager
   PUBLIC
@@ -23,7 +21,6 @@ set_target_properties(manager
 target_link_libraries(manager
   networking
   ${CMAKE_THREAD_LIBS_INIT}
-  nlohmann_json::nlohmann_json
 )
 
 install(TARGETS manager
