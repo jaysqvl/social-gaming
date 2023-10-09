@@ -1,5 +1,7 @@
 add_library(manager
   src/GeneralManager.cpp
+  src/Player.cpp
+  src/Spectator.cpp
 )
 
 target_include_directories(manager
