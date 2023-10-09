@@ -4,8 +4,6 @@ add_library(manager
   src/User.cpp
 )
 
-find_package(nlohmann_json REQUIRED)
-
 target_include_directories(manager
   PUBLIC
     $<INSTALL_INTERFACE:include>
@@ -23,7 +21,6 @@ set_target_properties(manager
 target_link_libraries(manager
   networking
   ${CMAKE_THREAD_LIBS_INIT}
-  nlohmann_json::nlohmann_json
 )
 
 install(TARGETS manager

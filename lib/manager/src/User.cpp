@@ -11,6 +11,6 @@ std::map<std::string, ElementPtr> User::getMap() {
     return userMap;
 }
 
-bool User::isOwner() {
+bool User::getIsOwner() {
     return isOwner;
 }

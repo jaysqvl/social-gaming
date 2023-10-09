@@ -18,5 +18,5 @@ public:
     User(std::string name, uint32_t id);
     std::string getName();
     std::map<std::string, ElementPtr> getMap();
-    bool isOwner();
+    bool getIsOwner();
 };
