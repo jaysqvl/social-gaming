@@ -1,5 +1,7 @@
 add_library(manager
   src/GeneralManager.cpp
+  src/Element.cpp
+  src/User.cpp
 )
 
 target_include_directories(manager
