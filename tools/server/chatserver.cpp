@@ -20,23 +20,24 @@ using networking::Message;
 
 // Function to read an HTML file and return its content as a string
 std::string getHTTPMessage(const char* htmlLocation) {
+  // Check if the HTML file is readable
   if (access(htmlLocation, R_OK ) != -1) {
+    // Open the file for reading
     std::ifstream infile{htmlLocation};
-    return std::string{std::istreambuf_iterator<char>(infile),
-                       std::istreambuf_iterator<char>()};
+     // Read the entire file into a string and return it
+    return std::string{std::istreambuf_iterator<char>(infile), std::istreambuf_iterator<char>()};
   }
 
   // If the HTML file cannot be opened, print an error message and exit
-  std::cerr << "Unable to open HTML index file:\n"
-            << htmlLocation << "\n";
+  std::cerr << "Unable to open HTML index file:\n" << htmlLocation << "\n";
   std::exit(-1);
 }
 
 int main(int argc, char* argv[]) {
+  // Check if the correct number of command-line arguments is provided
   if (argc < 3) {
-    // Check if the correct number of command-line arguments is provided
-    std::cerr << "Usage:\n  " << argv[0] << " <port> <html response>\n"
-              << "  e.g. " << argv[0] << " 4002 ./webchat.html\n";
+    // Print a usage message and exit with a non-zero status
+    std::cerr << "Usage:\n  " << argv[0] << " <port> <html response>\n" << "  e.g. " << argv[0] << " 4002 ./webchat.html\n";
     return 1;
   }
 
@@ -49,9 +50,9 @@ int main(int argc, char* argv[]) {
   // Create a Server object with the specified port and callbacks for connection events
   Server server{
     port,
-    getHTTPMessage(argv[2]),
-    std::bind(&GeneralManager::onConnect, &gm, std::placeholders::_1),
-    std::bind(&GeneralManager::onDisconnect, &gm, std::placeholders::_1)
+    getHTTPMessage(argv[2]), // HTML content from the specified file
+    std::bind(&GeneralManager::onConnect, &gm, std::placeholders::_1), // Callback for connection
+    std::bind(&GeneralManager::onDisconnect, &gm, std::placeholders::_1) // Callback for disconnection
   };
 
   for (;;) {
@@ -62,8 +63,7 @@ int main(int argc, char* argv[]) {
       server.update();
     } catch (std::exception& e) {
       // Handle exceptions that may occur during the server update
-      std::cerr << "Exception from Server update:\n"
-                << " " << e.what() << "\n\n";
+      std::cerr << "Exception from Server update:\n" << " " << e.what() << "\n\n";
       errorWhileUpdating = true;
     }
 
