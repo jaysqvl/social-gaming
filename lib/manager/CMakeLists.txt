@@ -1,7 +1,10 @@
 add_library(manager
   src/GeneralManager.cpp
+  src/GameManager.cpp
   src/Element.cpp
+  src/Rule.cpp
   src/User.cpp
+  src/Setup.cpp
 )
 
 target_include_directories(manager
@@ -21,8 +24,9 @@ set_target_properties(manager
 target_link_libraries(manager
   networking
   ${CMAKE_THREAD_LIBS_INIT}
+  tree-sitter-socialgaming
+  cpp-tree-sitter
 )
-
 install(TARGETS manager
   ARCHIVE DESTINATION lib
 )
