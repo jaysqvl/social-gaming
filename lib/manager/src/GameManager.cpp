@@ -103,7 +103,7 @@ void GameManager::parseAndSetRules() {
 
     //TODO: parse the nodes in the created tree into the rules vector
     //in the gamemanager object
-    //do we need a submodule for the tree sitter as well?
+    //do we need a submodule for the tree sitter as well? or is it fine
 
     auto treestring = root.getSExpr();
     printf("Syntax tree: %s\n", treestring.get());
