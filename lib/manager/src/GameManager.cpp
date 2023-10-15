@@ -24,7 +24,7 @@ void loadFile(std::string &contents, const std::string &filename) {
 GameManager::GameManager(std::string name, User owner) :
     owner(owner),
     gameName(name),
-    hasAudience(false),
+    audience(false),
     playerRange(std::make_pair(2, 8)) { //temp playerRange value
     // Initialize the GameManager with the owner and game name
     // Set the initial conditions
@@ -81,6 +81,14 @@ bool GameManager::hasAudience() {
     return !spectatorMap->empty();
 }
 
+bool ends_with(const std::string_view &str, const std::string_view &end) {
+    if (end.size() > str.size()) {
+        return false;
+    } else {
+        return str.substr(str.size() - end.size(), end.size()) == end;
+    }
+}
+
 void GameManager::parseAndSetRules() {
 
     // Create a language and parser using the Tree-sitter socialgaming language
@@ -90,7 +98,7 @@ void GameManager::parseAndSetRules() {
     std::string rulesTxt = "";
     std::string filename = "test.txt"; // get user input for this eventually
 
-    if (filename.ends_with(".txt")) {
+    if (ends_with(filename, ".txt")) {
         loadFile(rulesTxt, "test.txt");
     } else {
         //not a .txt file, can't be parsed. do nothing.
