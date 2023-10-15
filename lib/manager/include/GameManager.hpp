@@ -13,16 +13,20 @@
 using networking::Server;
 using networking::Connection;
 
+class Rule;
+
 class GameManager {
 private:
+    using RulePtr = std::shared_ptr<Rule>;
+
     std::vector<Connection> clients;
     User owner;
     std::string gameName;
     std::pair<int, int> playerRange;
-    bool hasAudience;
+    bool audience;
     // Stores the setups the game has the parse and execute
     std::vector<Setup> setups;
-    std::vector<Rule> rules;
+    std::vector<RulePtr> rules;
     std::map<std::string, ElementPtr> constants;
     std::map<std::string, ElementPtr> variables;
 
@@ -39,7 +43,7 @@ public:
     bool hasPlayer(std::string name);
     bool hasAudience();
 
-    std::vector<Rule> getRules() { return rules; }
+    std::vector<RulePtr> getRules() { return rules; }
     void parseAndSetRules();
 
 };

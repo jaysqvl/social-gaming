@@ -1,3 +1,5 @@
+#pragma once
+
 #include "json.hpp"
 #include <vector>
 #include <string>
@@ -14,7 +16,7 @@ private:
         MULTIPLE_CHOICE,
         JSON
     };
-    
+
     std::string name;
     GameKind kind;
     std::string prompt;
@@ -24,7 +26,7 @@ private:
     std::map<std::string, std::string> enumOptions;
     nlohmann::json jsonData;
 
-    public:
-    Setup(std::string gameName, GameKind gameKind, std::string userPrompt, int defaultChoice);
+public:
+    Setup(const std::string &gameName, const GameKind &gameKind, const std::string &userPrompt, int defaultChoice);
     nlohmann::json parseJsonData(std::string jsonString);
 };
