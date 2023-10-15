@@ -38,4 +38,8 @@ public:
     bool removeSpectator(std::string name);
     bool hasPlayer(std::string name);
     bool hasAudience();
+
+    std::vector<Rule> getRules() { return rules; }
+    void parseAndSetRules();
+
 };
