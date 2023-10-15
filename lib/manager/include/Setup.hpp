@@ -25,7 +25,6 @@ private:
     nlohmann::json jsonData;
 
     public:
-    Setup(std::string name, GameKind kind, std::string prompt, int defaultOption);
+    Setup(std::string gameName, GameKind gameKind, std::string userPrompt, int defaultChoice);
     nlohmann::json parseJsonData(std::string jsonString);
-
 };
