@@ -8,14 +8,21 @@
 #include <random>
 #include <memory>
 
-enum ElementType {
+class User;
+class UserRole;
+class Rule;
+class RuleStatus;
+
+enum class ElementType {
 	UNKNOWN,
 	INT, 
 	DOUBLE, 
 	STRING,
 	VECTOR,
 	MAP,
-	BOOL
+	BOOL, 
+	USER,
+	RULE,
 }; 
 
 // An interface for all specialized elements that allow a list to contain heterogeneous data types
@@ -110,7 +117,7 @@ public:
 	void shuffle();
 	//void sort(); Implement this later
 	//void deal(); Implement this later
-	void discard(unsigned amount);
+	void discard(size_t amount);
 };
 
 template <>
@@ -129,6 +136,36 @@ public:
             return "false";
     }
     void negateData() { data = !data; }
+};
+
+template <>
+class Element<std::shared_ptr<User>> final : public BaseElement {
+private:
+	std::shared_ptr<User> data;
+
+public:
+	Element(std::shared_ptr<User> newData) : data(newData) { type = ElementType::USER; }
+	void setData(std::shared_ptr<User> newData) { data = newData; }
+	User getData() const { return *data; }
+	std::string getName() const { return data->getName(); }
+	uint32_t getId() const { return data->getId(); }
+	std::map<std::string, ElementPtr> getMap() const { return data->getMap(); }
+	void setRole(UserRole newRole) { data->setRole(newRole); }
+	UserRole getRole() const { return data->getRole; }
+};
+
+template <>
+class Element<std::shared_ptr<Rule>> final : public BaseElement {
+private:
+	std::shared_ptr<Rule> data;
+
+public:
+	Element(std::shared_ptr<Rule> newData) : data(newData) { type = ElementType::RULE; }
+	void setData(std::shared_ptr<Rule> newData) { data = newData; }
+	Rule getData() const { return *data; }
+	void setStatus(RuleStatus newStatus) { data->setStatus(newStatus); }
+	RuleStatus getStatus() const { return status; }
+	virtual RuleStatus execute(std::map<std::string, ElementPtr> gameState) { data->execute(gameState); }
 };
 
 	
