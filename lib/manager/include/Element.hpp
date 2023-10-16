@@ -6,6 +6,7 @@
 #include <string>
 #include <glog/logging.h>
 #include <random>
+#include <memory>
 
 enum ElementType {
 	UNKNOWN,
@@ -15,17 +16,17 @@ enum ElementType {
 	VECTOR,
 	MAP,
 	BOOL
-} 
+}; 
 
 // An interface for all specialized elements that allow a list to contain heterogeneous data types
 class BaseElement {
-private: 
+protected: //Changed from 'private' to 'protected' to make the 'type' member variable accessible below
 	ElementType type;
 public:
 	virtual ~BaseElement() {}
 	
-	ElementType getType() const { return type }
-}
+	ElementType getType() const { return type; }
+};
 
 using ElementPtr = std::shared_ptr<BaseElement>;
 
@@ -39,11 +40,11 @@ public:
 	
 	//Default setter and getter
 	void setData(T newData) { data = newData; }
-	T getData() const { return data }
+	T getData() const { return data; }
 	
 	//Default size
 	int getSize() const { return 0; }
-}
+};
 
 template<>
 class Element<int> final : public BaseElement {
@@ -53,7 +54,7 @@ public:
 	Element(int newData) : data(newData) { type = ElementType::INT; }
 	void setData(int newData) { data = newData; }
 	int getData() const { return data; }	
-}
+};
 
 template<>
 class Element<double> final : public BaseElement {
@@ -63,7 +64,7 @@ public:
 	Element(double newData) : data(newData) { type = ElementType::DOUBLE; }
 	void setData(double newData) { data = newData; }
 	double getData() const { return data; }	
-}
+};
 
 template<>
 class Element<std::string> final : public BaseElement {
@@ -74,7 +75,7 @@ public:
 	void setData(std::string newData) { data = newData; }
 	std::string getData() const { return data; }
 	size_t getSize() const { return data.size(); }
-}
+};
 
 template<>
 class Element<std::map<std::string, ElementPtr>> final : public BaseElement {
@@ -91,7 +92,7 @@ public:
 	void updateElement(std::string key, ElementPtr element);
 	void removeKey(std::string key);
 	bool containKey(std::string key);
-}
+};
 
 template<>
 class Element<std::vector<ElementPtr>> final : public BaseElement {
@@ -110,24 +111,25 @@ public:
 	//void sort(); Implement this later
 	//void deal(); Implement this later
 	void discard(unsigned amount);
-}
+};
 
-template<>
+template <>
 class Element<bool> final : public BaseElement {
 private:
-	bool data;
+    bool data;
+
 public:
-	Element(bool newData) : data(newData) { type = ElementType::BOOL; }
-	void setData(bool newData) { data = newData; }
-	bool getData() const { return data; }
-	std::string getData() const {
-	    if (data)
-	    	return "true";
-	    else 
-	    	return "false";
-	}
-	void negateData() { data = !data; }
-}
+    Element(bool newData) : data(newData) { type = ElementType::BOOL; }
+    void setData(bool newData) { data = newData; }
+    bool getData() const { return data; }
+    std::string getStringData() const { // Renamed the function. C++ does not allow overloading functions based solely on differences in return types.
+        if (data)
+            return "true";
+        else
+            return "false";
+    }
+    void negateData() { data = !data; }
+};
 
 	
 	
