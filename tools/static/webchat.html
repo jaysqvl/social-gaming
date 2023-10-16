@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Web Chat</title>
+
+  <style>
+    body, input, select, textarea {
+      background: #031e11;
+      color: #10fd60;
+    }
+
+    #messages {
+      width: 80em;
+      height: 40em;
+      border: solid 1px #cccccc;
+      margin-bottom: 5px;
+      overflow-y: hidden;
+    }
+  </style>
+
+  <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+  <script>
+    $(document).ready(function() {
+      function appendText(text) {
+        $('#messages').append(text);
+        $('#messages').scrollTop($('#messages')[0].scrollHeight);
+      }
+
+      var ws = null;
+      var uriPieces = window.location.href.split('/');
+      var wsLocation = 'ws://' + uriPieces[2];
+      $('#uri:text').val(wsLocation);
+
+      $('#join').click(function() {
+        ws = new WebSocket(uri.value);
+        ws.onopen = function(ev) {
+          appendText("Connected!\n");
+          document.getElementById("sendMessage").disabled = false;
+          document.getElementById("send").disabled = false;
+        };
+        ws.close = function(ev) {
+          appendText("Disconnected!\n");
+          document.getElementById("sendMessage").disabled = true;
+          document.getElementById("send").disabled = true;
+        };
+        ws.onmessage = function(ev) {
+          appendText(ev.data + '\n');
+        };
+        ws.onerror = function(ev) {
+          appendText("[Error]\n");
+            console.log(ev);
+        };
+      });
+
+      $('#joinPlayer').click(function() {
+        ws = new WebSocket(uri.value);
+        ws.onopen = function(ev) {
+          let text = "Anonymous Player";
+          let username = prompt("Please enter your name: ", "Joe");
+          if (username != null && username != "") {
+            text = username;
+          }
+          ws.send("/changename " + text);
+
+          appendText(text + " joined as a player!\n");
+          ws.send("/setIsPlayer " + "true");
+
+          document.getElementById("sendMessage").disabled = false;
+          document.getElementById("send").disabled = false;
+        };
+        ws.onclose = function(ev) {
+          appendText("Disconnected!\n");
+          // document.getElementById("sendMessage").disabled = true;
+          // document.getElementById("send").disabled = true;
+        };
+        ws.onmessage = function(ev) {
+          appendText(ev.data + "\n");
+        };
+        ws.onerror = function(ev) {
+          appendText("[error]\n");
+          console.log(ev);
+        };
+      });
+
+      // Join game as a spectator
+      $('#joinSpectator').click(function() {
+        ws = new WebSocket(uri.value);
+        ws.onopen = function(ev) {
+          let text = "Anonymous Spectator";
+          let username = prompt("Please enter your name: ", "Bob");
+          if (username != null && username != "") {
+            text = username;
+          }
+          ws.send("/changename " + text);
+
+          appendText(text + " joined as a spectator!\n");
+          ws.send("/setIsPlayer " + "false");
+
+          document.getElementById("sendMessage").disabled = true;
+          document.getElementById("send").disabled = true;
+        };
+        ws.onmessage = function(ev) {
+          appendText(ev.data + "\n");
+        };
+        ws.onclose = function(ev) {
+          appendText("Disconnected!\n");
+          // document.getElementById("sendMessage").disabled = true;
+          // document.getElementById("send").disabled = true;
+        };
+        ws.onerror = function(ev) {
+          appendText("[error]\n");
+          console.log(ev);
+        };
+      });
+
+      $('#disconnect').click(function () {
+        ws.close();
+      });
+
+      $('#send').click(function () {
+        ws.send(sendMessage.value);
+        sendMessage.value = "";
+      });
+
+      $('#sendMessage').keyup(function(e) {
+        e.preventDefault();
+        if (e.keyCode === 13) {
+          $('#send').click();
+        }
+      });
+    });
+  </script>
+</head>
+
+<body>
+
+  <h1>Web Chat</h1>
+
+  Chat Server: <input id="uri" size="40">
+  <button id="join">Join</button>
+  <button id="joinPlayer">Join as Player</button>
+  <button id="joinSpectator">Join as Spectator</button>
+  <button id="disconnect">Disconnect</button><br />
+
+  <pre id="messages"></pre>
+
+  <div style="margin-bottom: 5px;">
+    Enter Message:<br />
+    <input id="sendMessage" size="80" value="" disabled="true"/>
+    <button id="send" disabled="true">Send</button>
+  </div>
+
+</body>
+</html>
