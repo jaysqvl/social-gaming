@@ -4,12 +4,14 @@ void Element<std::map<std::string, ElementPtr>>::setElement(std::string key, Ele
     data[key] = element;
 }
 
+// Modified this function since there is no suitable operator[] defined for const std::map<std::string, ElementPtr>
 ElementPtr Element<std::map<std::string, ElementPtr>>::getElement(std::string key) const {
-    if (data.find(key) != data.end())
-    	return data[key];
+    auto it = data.find(key);
+    if (it != data.end())
+        return it->second;
     else 
-    	LOG(INFO) << "Key doesn't exist!\n";
-    	return nullptr;
+        LOG(INFO) << "Key doesn't exist!\n";
+        return nullptr;
 }
 
 void Element<std::map<std::string, ElementPtr>>::updateElement(std::string key, ElementPtr element) {
@@ -19,7 +21,7 @@ void Element<std::map<std::string, ElementPtr>>::updateElement(std::string key, 
     	LOG(INFO) << "Key doesn't exist!\n";
 }
 
-void Element<std::map<std::string, ElementPtr>>::removeElement(std::string key) {
+void Element<std::map<std::string, ElementPtr>>::removeKey(std::string key) {
     data.erase(key);
 }
 
