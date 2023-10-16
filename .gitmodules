@@ -1,0 +1,3 @@
+[submodule "lib/web-socket-networking"]
+	path = lib/web-socket-networking
+	url = https://github.com/nsumner/web-socket-networking.git
