@@ -1,4 +1,6 @@
 #include "Element.hpp"
+#include "User.hpp"
+#include "Rule.hpp"
 
 void Element<std::map<std::string, ElementPtr>>::setElement(std::string key, ElementPtr element) {
     data[key] = element;
@@ -46,7 +48,7 @@ void Element<std::vector<ElementPtr>>::shuffle() {
     std::shuffle(data.begin(), data.end(), rng);
 }
 
-void Element<std::vector<ElementPtr>>::discard(unsigned amount) {
+void Element<std::vector<ElementPtr>>::discard(size_t amount) {
     data.erase(data.end() - amount, data.end());
 }
 
