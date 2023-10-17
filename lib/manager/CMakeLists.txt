@@ -23,6 +23,7 @@ set_target_properties(manager
 
 target_link_libraries(manager
   networking
+  router
   ${CMAKE_THREAD_LIBS_INIT}
   tree-sitter-socialgaming
   cpp-tree-sitter
