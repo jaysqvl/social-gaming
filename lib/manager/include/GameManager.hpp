@@ -43,6 +43,10 @@ public:
     bool hasPlayer(std::string name);
     bool hasAudience();
 
+    std::vector<Setup> getSetups();
+    std::map<std::string, ElementPtr> getConstants();
+    std::map<std::string, ElementPtr> getVariables();
+
     std::vector<RulePtr> getRules() { return rules; }
     void parseAndSetRules();
 
