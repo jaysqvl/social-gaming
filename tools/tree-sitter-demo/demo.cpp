@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
   // auto treestring = root.getSExpr();
   // printf("Syntax tree: %s\n", treestring.get());
 
-  SyntaxGenerator gen;
+  SyntaxGenerator gen{sourcecode};
   auto syntax = gen.generate(filename, root);
   syntax->print(0);
 
