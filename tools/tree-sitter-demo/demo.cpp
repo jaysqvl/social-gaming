@@ -204,6 +204,7 @@ int main(int argc, char *argv[]) {
     ts::Node root = tree.getRootNode();
 
     // Get the syntax tree in S-expression format and print it
+<<<<<<< HEAD
     // auto treestring = root.getSExpr();
     // printf("Syntax tree: %s\n", treestring.get());
 
@@ -216,6 +217,10 @@ int main(int argc, char *argv[]) {
 
   std::cout << "== Result ==" << std::endl;
   std::visit(Visitor::Printer{}, result);
+=======
+    auto treestring = root.getSExpr();
+    printf("Syntax tree: %s\n", treestring.get());
+>>>>>>> added code to tree sitter demo to test for understanding
 
     // Return 0 to indicate successful execution
     return 0;
