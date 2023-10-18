@@ -6,6 +6,8 @@
 #include <fstream>
 
 #include <cpp-tree-sitter.h>
+#include "SyntaxNode.hpp"
+#include "SyntaxGenerator.hpp"
 
 // Declare an external C function that provides the Tree-sitter language
 extern "C" {
@@ -42,15 +44,19 @@ int main(int argc, char *argv[]) {
   loadFile(sourcecode, filename);
 
   // Print the source code to the standard output
-  std::cout << sourcecode << std::endl;
+  // std::cout << sourcecode << std::endl;
 
   // Parse the source code using the Tree-sitter parser
   ts::Tree tree = parser.parseString(sourcecode);
   ts::Node root = tree.getRootNode();
 
   // Get the syntax tree in S-expression format and print it
-  auto treestring = root.getSExpr();
-  printf("Syntax tree: %s\n", treestring.get());
+  // auto treestring = root.getSExpr();
+  // printf("Syntax tree: %s\n", treestring.get());
+
+  SyntaxGenerator gen{sourcecode};
+  auto syntax = gen.generate(filename, root);
+  syntax->print(0);
 
   // Return 0 to indicate successful execution
   return 0;
