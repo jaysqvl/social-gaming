@@ -74,13 +74,13 @@ int main(int argc, char* argv[]) {
 
     // Receive incoming messages from the server
     const auto incoming = server.receive();
-    std::deque<Message> processed;
+    std::deque<Packet> processed;
     std::deque<Message> outgoing;
 
     // Process incoming messages and build outgoing messages
     gm.processMessages(server, processed, incoming);
-    for (auto &message : processed) {
-        gm.buildOutgoing(outgoing, message);
+    for (auto &packet : processed) {
+        gm.buildOutgoing(outgoing, packet);
     }
 
     // Send outgoing messages to connected clients
