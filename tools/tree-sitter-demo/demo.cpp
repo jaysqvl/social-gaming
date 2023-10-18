@@ -68,17 +68,12 @@ int main(int argc, char *argv[]) {
     ts::Node root = tree.getRootNode();
 
     // Get the syntax tree in S-expression format and print it
-<<<<<<< HEAD
     // auto treestring = root.getSExpr();
     // printf("Syntax tree: %s\n", treestring.get());
 
-  SyntaxGenerator gen{sourcecode};
-  auto syntax = gen.generate(filename, root);
-  syntax->print(0);
-=======
-    auto treestring = root.getSExpr();
-    printf("Syntax tree: %s\n", treestring.get());
->>>>>>> 25f2b9dab344d318ef15db5e16a6e429984f3f4e
+    SyntaxGenerator gen{sourcecode};
+    auto syntax = gen.generate(filename, root);
+    syntax->print(0);
 
     // Return 0 to indicate successful execution
     return 0;
