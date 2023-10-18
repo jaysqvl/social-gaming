@@ -6,17 +6,25 @@
 #include <map>
 #include <cstdint>
 
+enum class UserRole {
+    Owner,
+    Player,
+    Audience
+};
+
 class User {
 private:
     std::string name;
     uint32_t id;
     std::map<std::string, ElementPtr> userMap;
     ElementPtr element;
-    bool isOwner;
+    UserRole role = UserRole::Audience; // Default: Audience
 
 public:
     User(std::string name, uint32_t id);
-    std::string getName();
-    std::map<std::string, ElementPtr> getMap();
-    bool getIsOwner();
+    std::string getName() const;
+    uint32_t getId() const;
+    std::map<std::string, ElementPtr> getMap() const;
+    void setRole(UserRole newRole);
+    UserRole getRole() const;
 };
