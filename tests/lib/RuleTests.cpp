@@ -1,7 +1,8 @@
 #include <gtest/gtest.h>
 #include "gmock/gmock.h"
 
-#include "Rule.h"
+#include "Rule.hpp"
+#include "User.hpp"
 
 using namespace testing;
 
