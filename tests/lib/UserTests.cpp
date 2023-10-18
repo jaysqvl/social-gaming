@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
-#include "gmock/gmock.h"
+#include <gmock/gmock.h>
+
 #include <limits>
 
 #include "User.hpp"
