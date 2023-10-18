@@ -1,5 +1,5 @@
 # Include GoogleTest headers
-include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
+include_directories(${PROJECT_SOURCE_DIR}/lib/googletest/include)
 
 # Your test files
 set(TEST_FILES
@@ -14,10 +14,14 @@ set(TEST_FILES
 )
 
 # Define a test executable
-add_executable(runUnitTests ${TEST_FILES})
+add_executable(runAllTests ${TEST_FILES})
 
 # Link against GoogleTest
-target_link_libraries(runUnitTests gtest gtest_main)
+target_link_libraries(runAllTests 
+    PRIVATE
+        googletest
+        manager
+        web-socket-networking)
 
 # Link against your modules (if they are in a library or executable)
 # target_link_libraries(runUnitTests ChatServer)
