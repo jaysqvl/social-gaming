@@ -13,8 +13,8 @@ enum class RuleStatus {
 };
 
 class Rule;
-using std::shared_ptr<Rule> = RulePtr;
-using std::shared_ptr<GameManager> = GameManagerPtr;
+using RulePtr = std::shared_ptr<Rule>;
+using GameManagerPtr = std::shared_ptr<GameManager>;
 
 class Rule {
 private:
