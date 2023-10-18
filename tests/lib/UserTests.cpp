@@ -6,7 +6,7 @@
 
 using namespace testing;
 
-TEST(UserTests, getName()) {
+TEST(UserTests, getNameTest) {
     std::string name = "Bob";
     uint32_t id = 1;
     User user(name, id);
@@ -14,7 +14,7 @@ TEST(UserTests, getName()) {
     ASSERT_EQ(name, user.getName());
 }
 
-TEST(UserTests, getId()) {
+TEST(UserTests, getIdTest) {
     std::string name1 = "Bob";
     uint32_t id1 = 1;
     User user1(name1, id1);
@@ -31,7 +31,7 @@ TEST(UserTests, getId()) {
     ASSERT_EQ(id3, user3.getId());
 }
 
-TEST(UserTests, getMap()) {
+TEST(UserTests, getMapTest) {
     std::string name = "Bob";
     uint32_t id = 1;
     User user(name, id);
@@ -39,7 +39,7 @@ TEST(UserTests, getMap()) {
     ASSERT_EQ(NULL, user.getMap());
 }
 
-TEST(UserTests, getRole()) {
+TEST(UserTests, getRoleTest) {
     std::string name = "Bob";
     uint32_t id = 1;
     User user(name, id);
