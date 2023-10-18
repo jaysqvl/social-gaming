@@ -65,7 +65,7 @@ void ParseCommand(std::vector<std::string_view> &elems, const std::string_view &
 
 // This function processes incoming messages from clients.
 // It checks for commands and processes them or forwards regular messages to other clients.
-void GeneralManager::processMessages(Server &server, std::deque<Message> &outgoing, const std::deque<Message>& incoming) {
+void GeneralManager::processMessages(Server &server, std::deque<Packet> &outgoing, const std::deque<Message>& incoming) {
     for (const auto& message : incoming) {
 
         // Check if the message is a command (starts with '/')
@@ -99,24 +99,24 @@ void GeneralManager::processMessages(Server &server, std::deque<Message> &outgoi
             // Process regular messages and construct outgoing messages
             const auto &id = message.connection.id;
             const auto &name = info[id].username;
-            
+
             std::ostringstream out;
             out << (name.empty() ? std::to_string(id) : name) << "> " << FirstLine(message.text);
-            outgoing.push_back(Message{message.connection, out.str()});
+            outgoing.push_back(Packet{PacketType::FROM, message.connection, out.str()});
         }
     }
 }
 
 // This function builds outgoing messages for clients in the same room as the sender.
-void GeneralManager::buildOutgoing(std::deque<Message> &outgoing, const Message &message) {
-    const auto &room = info[message.connection.id].room; // Get the room of the sender
+void GeneralManager::buildOutgoing(std::deque<Message> &outgoing, const Packet &packet) {
+    const auto &room = info[packet.connection.id].room; // Get the room of the sender
 
     // Use a range-based for loop to iterate over the 'clients' vector
     for (auto& client : clients) {
         // Check if the client is in the same room as the sender
         if (info[client.id].room == room) {
             // If so, add the message to the 'outgoing' queue for that client
-            outgoing.push_back({client, message.text});
+            outgoing.push_back({client, packet.text});
         }
     }
 }
