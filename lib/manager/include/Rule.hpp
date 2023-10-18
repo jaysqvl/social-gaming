@@ -3,6 +3,7 @@
 #include "Element.hpp"
 #include "User.hpp"
 #include "GameManager.hpp"  // Need to implement this
+
 #include <functional>
 
 enum class RuleStatus {
@@ -13,6 +14,7 @@ enum class RuleStatus {
 };
 
 class Rule;
+class GameManager;
 using RulePtr = std::shared_ptr<Rule>;
 using GameManagerPtr = std::shared_ptr<GameManager>;
 
@@ -53,7 +55,7 @@ private:
 	std::vector<ElementPtr> list;
 	std::vector<RulePtr> subRules;
 	std::map<ElementPtr, std::vector<RulePtr>::iterator> currentRuleMap;
-	std::map<ElementPtr, RuleStatus >> currentStatusMap;
+	std::map<ElementPtr, RuleStatus> > currentStatusMap;
 
 public:
 	ParallelFor(GameManagerPtr game, std::vector<RulePtr> rules) : ownGame(game), subRules(rules) {}

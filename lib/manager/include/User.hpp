@@ -1,3 +1,5 @@
+#pragma once
+
 #include "Element.hpp"
 
 #include <stdint.h>
