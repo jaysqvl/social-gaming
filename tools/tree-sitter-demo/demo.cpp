@@ -204,10 +204,10 @@ int main(int argc, char *argv[]) {
     ts::Node root = tree.getRootNode();
 
     // Get the syntax tree in S-expression format and print it
-<<<<<<< HEAD
     // auto treestring = root.getSExpr();
     // printf("Syntax tree: %s\n", treestring.get());
 
+<<<<<<< HEAD
   // SyntaxGenerator gen{sourcecode};
   // auto syntax = gen.generate(filename, root);
   // syntax->print(0);
@@ -221,6 +221,11 @@ int main(int argc, char *argv[]) {
     auto treestring = root.getSExpr();
     printf("Syntax tree: %s\n", treestring.get());
 >>>>>>> added code to tree sitter demo to test for understanding
+=======
+    SyntaxGenerator gen{sourcecode};
+    auto syntax = gen.generate(filename, root);
+    syntax->print(0);
+>>>>>>> cleaned up bug caused when trying to resolve merge conflicts
 
     // Return 0 to indicate successful execution
     return 0;
