@@ -153,10 +153,14 @@ TSLanguage* tree_sitter_socialgaming();
 // Define a function to load the contents of a file into a string
 void loadFile(std::string &contents, const std::string &filename) {
     std::ifstream ifs(filename);
-    contents.assign(
-        std::istreambuf_iterator<char>(ifs),
-        std::istreambuf_iterator<char>()
-    );
+
+    //only assign file contents if the text file actually exists.
+    if (ifs.is_open()) {
+      contents.assign(
+          std::istreambuf_iterator<char>(ifs),
+          std::istreambuf_iterator<char>()
+      );
+    }
 }
 
 int main(int argc, char *argv[]) {
@@ -173,22 +177,35 @@ int main(int argc, char *argv[]) {
    // Get the filename from the command line arguments
   std::string filename = std::string(argv[1]);
 
-  // Declare a string to store the source code from the file
-  std::string sourcecode;
+  if (!filename.ends_with(".txt")) {
+    std::cout << "Only .txt files are able to be parsed." << std::endl;
 
-  // Load the contents of the file into the 'sourcecode' string
-  loadFile(sourcecode, filename);
+    //error code where invalid file argument given.
+    return -1;
+  } else {
 
-  // Print the source code to the standard output
-  // std::cout << sourcecode << std::endl;
+    // Declare a string to store the source code from the file
+    std::string sourcecode;
 
-  // Parse the source code using the Tree-sitter parser
-  ts::Tree tree = parser.parseString(sourcecode);
-  ts::Node root = tree.getRootNode();
+    // Load the contents of the file into the 'sourcecode' string
+    loadFile(sourcecode, filename);
 
-  // Get the syntax tree in S-expression format and print it
-  // auto treestring = root.getSExpr();
-  // printf("Syntax tree: %s\n", treestring.get());
+    // Print the source code to the standard output
+    std::cout << sourcecode << std::endl;
+
+    //if the filename input was invalid, the sourcecode will be 
+    //empty and an error int will be returned.
+    if (sourcecode.empty()) {
+      std::cout << "Please provide a valid, existing .txt file to be parsed." << std::endl;
+    }
+
+    // Parse the source code using the Tree-sitter parser
+    ts::Tree tree = parser.parseString(sourcecode);
+    ts::Node root = tree.getRootNode();
+
+    // Get the syntax tree in S-expression format and print it
+    // auto treestring = root.getSExpr();
+    // printf("Syntax tree: %s\n", treestring.get());
 
   // SyntaxGenerator gen{sourcecode};
   // auto syntax = gen.generate(filename, root);
@@ -200,6 +217,7 @@ int main(int argc, char *argv[]) {
   std::cout << "== Result ==" << std::endl;
   std::visit(Visitor::Printer{}, result);
 
-  // Return 0 to indicate successful execution
-  return 0;
+    // Return 0 to indicate successful execution
+    return 0;
+  }
 }
