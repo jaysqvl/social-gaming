@@ -8,10 +8,13 @@
 #include <random>
 #include <memory>
 
-class User;
-class UserRole;
-class Rule;
-class RuleStatus;
+#include "User.hpp"
+#include "Rule.hpp"
+
+// class User;
+// class UserRole;
+// class Rule;
+// class RuleStatus;
 
 enum class ElementType {
 	UNKNOWN,
@@ -167,8 +170,3 @@ public:
 	RuleStatus getStatus() const { return status; }
 	virtual RuleStatus execute(std::map<std::string, ElementPtr> gameState) { data->execute(gameState); }
 };
-
-	
-	
-	
-	
