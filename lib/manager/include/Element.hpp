@@ -165,7 +165,7 @@ private:
 public:
 	Element(std::shared_ptr<Rule> newData) : data(newData) { type = ElementType::RULE; }
 	void setData(std::shared_ptr<Rule> newData) { data = newData; }
-	Rule getData() const { return *data; }
+	std::shared_ptr<Rule> getData() const { return *data; }
 	void setStatus(RuleStatus newStatus) { data->setStatus(newStatus); }
 	RuleStatus getStatus() const { return status; }
 	virtual RuleStatus execute(std::map<std::string, ElementPtr> gameState) { data->execute(gameState); }
