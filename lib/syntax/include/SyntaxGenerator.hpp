@@ -17,4 +17,7 @@ private:
             std::string_view name, const ts::Node &node);
     std::unique_ptr<SyntaxNode> generateAtom(
             const ts::Node &node);
+    SyntaxGenerator(void);
+    std::unique_ptr<SyntaxNode> generate(
+            const std::string & name, const ts::Node &node);
 };
