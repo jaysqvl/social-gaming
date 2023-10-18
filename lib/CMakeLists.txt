@@ -1,3 +1,5 @@
 add_subdirectory(web-socket-networking)
 add_subdirectory(manager)
 add_subdirectory(googletest)
+add_subdirectory(router)
+add_subdirectory(syntax)
