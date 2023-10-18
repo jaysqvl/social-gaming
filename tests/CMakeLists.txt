@@ -3,10 +3,14 @@ include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
 
 # Your test files
 set(TEST_FILES
-    tools/test_chatserver.cpp
-    lib/test_Element.cpp
-    lib/test_GeneralManager.cpp
-    lib/test_Rule.cpp
+    tools/DemoTests.cpp
+    tools/ChatServerTests.cpp
+    lib/ElementTests.cpp
+    lib/GeneralManagerTests.cpp
+    lib/GameManagerTests.cpp
+    lib/RuleTests.cpp
+    lib/SetupTests.cpp
+    lib/UserTests.cpp
 )
 
 # Define a test executable
