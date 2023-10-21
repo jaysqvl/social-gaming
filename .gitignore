@@ -3,3 +3,5 @@ build/**
 games
 games/**
 .vscode
+.vscode/
+.vscode/**
