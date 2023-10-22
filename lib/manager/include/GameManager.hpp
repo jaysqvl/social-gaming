@@ -13,7 +13,7 @@
 using networking::Server;
 using networking::Connection;
 
-class Rule;
+// class Rule;
 
 class GameManager {
 private:
