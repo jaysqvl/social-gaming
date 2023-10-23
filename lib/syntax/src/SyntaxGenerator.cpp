@@ -7,7 +7,7 @@ SyntaxGenerator::SyntaxGenerator(const std::string &source) :
 
 std::unique_ptr<SyntaxNode> SyntaxGenerator::generate(
         const std::string & name, const ts::Node &node) {
-    auto result = std::make_unique<SyntaxNode>("program", name, 0);
+    auto result = std::make_unique<SyntaxNode>("program", name);
 
     size_t numChildren = node.getNumChildren();
     for (size_t i = 0; i < numChildren; i++) {
@@ -22,7 +22,7 @@ std::unique_ptr<SyntaxNode> SyntaxGenerator::generate(
 
 std::unique_ptr<SyntaxNode> SyntaxGenerator::generateConfiguration(
         const ts::Node &node) {
-    auto result = std::make_unique<SyntaxNode>("configuration", "", 0);
+    auto result = std::make_unique<SyntaxNode>("configuration", "");
 
     size_t numChildren = node.getNumChildren();
     for (size_t i = 0; i < numChildren; i++) {
@@ -45,7 +45,7 @@ std::unique_ptr<SyntaxNode> SyntaxGenerator::generateConfiguration(
 
 std::unique_ptr<SyntaxNode> SyntaxGenerator::generateField(
         std::string_view name, const ts::Node &node) {
-    auto result = std::make_unique<SyntaxNode>("field", std::string(name), 0);
+    auto result = std::make_unique<SyntaxNode>("field", std::string(name));
 
     size_t numChildren = node.getNumChildren();
     for (size_t i = 0; i < numChildren; i++) {
@@ -53,7 +53,7 @@ std::unique_ptr<SyntaxNode> SyntaxGenerator::generateField(
         auto type = child.getType();
 
         if (type == "(") {
-            auto temp = std::make_unique<SyntaxNode>("range", "", 0);
+            auto temp = std::make_unique<SyntaxNode>("range", "");
             do {
                 temp->append(generateAtom(node.getChild(++i)));
             } while (node.getChild(++i).getType() == ",");
@@ -71,6 +71,5 @@ std::unique_ptr<SyntaxNode> SyntaxGenerator::generateAtom(
         const ts::Node &node) {
     return std::make_unique<SyntaxNode>(
             std::string(node.getType()),
-            std::string(node.getSourceRange(source)),
-            0);
+            std::string(node.getSourceRange(source)));
 }

@@ -2,8 +2,8 @@
 
 #include <iostream>
 
-SyntaxNode::SyntaxNode(const std::string &type, const std::string &text, int number) :
-    type{type}, text{text}, number{number} {}
+SyntaxNode::SyntaxNode(const std::string &type, const std::string &text) :
+    type{type}, text{text} {}
 
 
 std::string SyntaxNode::getType(void) {
@@ -12,10 +12,6 @@ std::string SyntaxNode::getType(void) {
 
 std::string SyntaxNode::getText(void) {
     return text;
-}
-
-int SyntaxNode::getNumber(void) {
-    return number;
 }
 
 size_t SyntaxNode::size(void) {
@@ -34,7 +30,7 @@ void SyntaxNode::print(size_t depth) {
     for (size_t i = 0; i < depth; i++) {
         std::cout << " ";
     }
-    std::cout << type << ": " << text << " (" << number << ")" << std::endl;
+    std::cout << type << ": " << text << std::endl;
 
     for (const auto &child : children) {
         child->print(depth + 2);
