@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
    // Get the filename from the command line arguments
   std::string filename = std::string(argv[1]);
 
-  if (!filename.ends_with(".txt")) {
+  if (filename.compare(filename.size() - 4, 4, ".txt") != 0) {
     std::cout << "Only .txt files are able to be parsed." << std::endl;
 
     //error code where invalid file argument given.
