@@ -1,5 +1,7 @@
 #pragma once
 
+
+//none of these files should be circularly depending on this EXCEPT for GeneralManager.
 #include "Server.h"
 #include "Setup.hpp"
 #include "User.hpp"
@@ -26,7 +28,10 @@ private:
     bool audience;
     // Stores the setups the game has the parse and execute
     std::vector<Setup> setups;
-    std::vector<RulePtr> rules;
+
+    //TODO: FIX CIRCULAR DEPENDENCY
+    std::vector<RulePtr> rules; // game manager should have rule, but rule should not have gamemanager
+
     std::map<std::string, ElementPtr> constants;
     std::map<std::string, ElementPtr> variables;
 

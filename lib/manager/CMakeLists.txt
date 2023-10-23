@@ -3,8 +3,8 @@ add_library(manager
   # src/GameManager.cpp
   # src/Element.cpp
   # src/Rule.cpp
-  # src/User.cpp
-  # src/Setup.cpp
+  src/User.cpp
+  src/Setup.cpp
 )
 
 target_include_directories(manager
