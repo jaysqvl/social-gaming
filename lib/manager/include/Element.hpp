@@ -8,10 +8,13 @@
 #include <random>
 #include <memory>
 
-class User;
-class UserRole;
-class Rule;
-class RuleStatus;
+#include "User.hpp"
+#include "Rule.hpp"
+
+// class User;
+// class UserRole;
+// class Rule;
+// class RuleStatus;
 
 enum class ElementType {
 	UNKNOWN,
@@ -162,13 +165,8 @@ private:
 public:
 	Element(std::shared_ptr<Rule> newData) : data(newData) { type = ElementType::RULE; }
 	void setData(std::shared_ptr<Rule> newData) { data = newData; }
-	Rule getData() const { return *data; }
+	std::shared_ptr<Rule> getData() const { return *data; }
 	void setStatus(RuleStatus newStatus) { data->setStatus(newStatus); }
 	RuleStatus getStatus() const { return status; }
 	virtual RuleStatus execute(std::map<std::string, ElementPtr> gameState) { data->execute(gameState); }
 };
-
-	
-	
-	
-	
