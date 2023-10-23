@@ -16,6 +16,8 @@ class User {
 private:
     std::string name;
     uint32_t id;
+
+    //TODO: maybe look into element and see if there is circular dependency
     std::map<std::string, ElementPtr> userMap;
     ElementPtr element;
     UserRole role = UserRole::Audience; // Default: Audience
