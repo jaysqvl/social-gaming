@@ -73,13 +73,4 @@ std::unique_ptr<SyntaxNode> SyntaxGenerator::generateAtom(
             std::string(node.getType()),
             std::string(node.getSourceRange(source)),
             0);
-
-SyntaxGenerator::SyntaxGenerator(void) {
-
-}
-
-std::unique_ptr<SyntaxNode> SyntaxGenerator::generate(
-        const std::string & name, const ts::Node &node) {
-    return std::make_unique<SyntaxNode>("program", name, 0);
-            std::string(node.getSourceRange(source));
 }
