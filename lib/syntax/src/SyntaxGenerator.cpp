@@ -71,6 +71,5 @@ std::unique_ptr<SyntaxNode> SyntaxGenerator::generateAtom(
         const ts::Node &node) {
     return std::make_unique<SyntaxNode>(
             std::string(node.getType()),
-            std::string(node.getSourceRange(source)),
-            0);
+            std::string(node.getSourceRange(source)));
 }
