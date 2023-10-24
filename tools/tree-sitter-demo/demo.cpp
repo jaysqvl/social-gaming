@@ -152,24 +152,15 @@ TSLanguage* tree_sitter_socialgaming();
 
 // Define a function to load the contents of a file into a string
 void loadFile(std::string &contents, const std::string &filename) {
-    std::string fileContents;
-    
     std::ifstream ifs(filename);
 
     //only assign file contents if the text file actually exists.
-    // if (ifs.is_open()) {
-    //   contents.assign(
-    //       std::istreambuf_iterator<char>(ifs),
-    //       std::istreambuf_iterator<char>()
-    //   );
-    // }
-    while (getline(ifs, fileContents)) {
-      //do nothing, let the file read in?
-      //std::cout << fileContents;
-      contents.append(fileContents);
+    if (ifs.is_open()) {
+      contents.assign(
+          std::istreambuf_iterator<char>(ifs),
+          std::istreambuf_iterator<char>()
+      );
     }
-    
-    ifs.close();
 }
 
 int main(int argc, char *argv[]) {
@@ -186,7 +177,7 @@ int main(int argc, char *argv[]) {
    // Get the filename from the command line arguments
   std::string filename = std::string(argv[1]);
 
-  if (filename.compare(filename.size() - 4, 4, ".txt") != 0) {
+  if (!filename.ends_with(".txt")) {
     std::cout << "Only .txt files are able to be parsed." << std::endl;
 
     //error code where invalid file argument given.
@@ -212,11 +203,10 @@ int main(int argc, char *argv[]) {
     ts::Tree tree = parser.parseString(sourcecode);
     ts::Node root = tree.getRootNode();
 
-    // //Get the syntax tree in S-expression format and print it
+    // Get the syntax tree in S-expression format and print it
     // auto treestring = root.getSExpr();
     // printf("Syntax tree: %s\n", treestring.get());
 
-<<<<<<< HEAD
   // SyntaxGenerator gen{sourcecode};
   // auto syntax = gen.generate(filename, root);
   // syntax->print(0);
@@ -226,15 +216,6 @@ int main(int argc, char *argv[]) {
 
   std::cout << "== Result ==" << std::endl;
   std::visit(Visitor::Printer{}, result);
-=======
-    auto treestring = root.getSExpr();
-    printf("Syntax tree: %s\n", treestring.get());
->>>>>>> added code to tree sitter demo to test for understanding
-=======
-    SyntaxGenerator gen{sourcecode};
-    auto syntax = gen.generate(filename, root);
-    syntax->print(0);
->>>>>>> cleaned up bug caused when trying to resolve merge conflicts
 
     // Return 0 to indicate successful execution
     return 0;
