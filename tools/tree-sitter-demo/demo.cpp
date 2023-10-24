@@ -15,24 +15,16 @@ TSLanguage* tree_sitter_socialgaming();
 }
 
 // Define a function to load the contents of a file into a string
-void loadFile(std::string &contents, const std::string &filename) {
-    std::string fileContents;
-    
+void loadFile(std::string &contents, const std::string &filename) {    
     std::ifstream ifs(filename);
 
     //only assign file contents if the text file actually exists.
-    // if (ifs.is_open()) {
-    //   contents.assign(
-    //       std::istreambuf_iterator<char>(ifs),
-    //       std::istreambuf_iterator<char>()
-    //   );
-    // }
-    while (getline(ifs, fileContents)) {
-      //do nothing, let the file read in?
-      //std::cout << fileContents;
-      contents.append(fileContents);
+    if (ifs.is_open()) {
+      contents.assign(
+          std::istreambuf_iterator<char>(ifs),
+          std::istreambuf_iterator<char>()
+      );
     }
-    
     ifs.close();
 }
 
@@ -82,7 +74,7 @@ int main(int argc, char *argv[]) {
 
     SyntaxGenerator gen{sourcecode};
     auto syntax = gen.generate(filename, root);
-    syntax->print(0);
+    syntax->print(1);
 
     // Return 0 to indicate successful execution
     return 0;
