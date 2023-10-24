@@ -94,10 +94,10 @@ public:
             }
             return result;
         } else if (type == "configuration" ||
-                type == "constants" /*||
+                type == "constants" ||
                 type == "variables" ||
                 type == "per_player" ||
-                type == "per_audience" ||
+                type == "per_audience" /*||
                 type == "rules" */ ||
                 type == "setup_rule") {
             if (node.getNumChildren() > 1) {
@@ -109,7 +109,7 @@ public:
             } else {
                 return None{};
             }
-        } else if (node.getType() == "value_map") {
+        } else if (type == "value_map") {
             auto child = node.getChild(0);
             return VisitSibling(child);
         } else if (type == "map_entry") {
@@ -120,26 +120,33 @@ public:
         } else if (type == "expression") {
             return Visit(node.getChild(0));
         } else if (type == "list_literal") {
-            return Visit(node.getChild(1));
+            if (node.getNumChildren() == 3) {
+                return Visit(node.getChild(1));
+            } else {
+                return List{};
+            }
         } else if (type == "expression_list") {
             List result;
             for (size_t i = 0; i < node.getNumChildren(); i += 2) {
                 result.value.push_back(Visit(node.getChild(i)));
             }
             return result;
-        } else if (node.getType() == "quoted_string") {
+        } else if (type == "quoted_string") {
             auto temp = std::string(node.getSourceRange(source));
             return String{temp};
-        } else if (node.getType() == "number_range") {
+        } else if (type == "number_range") {
             auto begin = std::string(node.getChild(1).
                     getSourceRange(source));
             auto end = std::string(node.getChild(3).
                     getSourceRange(source));
             return Range{std::stoi(begin), std::stoi(end)};
-        } else if (node.getType() == "boolean") {
+        } else if (type == "boolean") {
             auto temp = node.getChild(0).getSourceRange(source);
             return Boolean{temp[0] == 't'};
-        } else if (node.getType() == "integer") {
+        } else if (type == "number") {
+            auto temp = std::string(node.getSourceRange(source));
+            return Integer{stoi(temp)};
+        } else if (type == "integer") {
             auto temp = std::string(node.getSourceRange(source));
             return Identifier{temp};
         } else if (type == "comment") {
