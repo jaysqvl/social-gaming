@@ -151,7 +151,7 @@ TSLanguage* tree_sitter_socialgaming();
 }
 
 // Define a function to load the contents of a file into a string
-void loadFile(std::string &contents, const std::string &filename) {
+void loadFile(std::string &contents, const std::string &filename) {    
     std::ifstream ifs(filename);
 
     //only assign file contents if the text file actually exists.
@@ -161,6 +161,7 @@ void loadFile(std::string &contents, const std::string &filename) {
           std::istreambuf_iterator<char>()
       );
     }
+    ifs.close();
 }
 
 int main(int argc, char *argv[]) {
@@ -177,7 +178,7 @@ int main(int argc, char *argv[]) {
    // Get the filename from the command line arguments
   std::string filename = std::string(argv[1]);
 
-  if (!filename.ends_with(".txt")) {
+  if (filename.compare(filename.size() - 4, 4, ".txt") != 0) {
     std::cout << "Only .txt files are able to be parsed." << std::endl;
 
     //error code where invalid file argument given.
