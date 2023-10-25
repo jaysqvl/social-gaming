@@ -97,8 +97,8 @@ public:
                 type == "constants" ||
                 type == "variables" ||
                 type == "per_player" ||
-                type == "per_audience" /*||
-                type == "rules" */ ||
+                type == "per_audience" ||
+                type == "rules" ||
                 type == "setup_rule") {
             if (node.getNumChildren() > 1) {
                 auto key = std::string(node.getChild(0).
@@ -201,48 +201,84 @@ private:
     std::string source;
 };
 
-struct Printer {
+class Printer {
+public:
+    Printer() :
+        depth{0} {}
+    void printDepth() {
+        for (size_t i = 0; i < depth; i++) {
+            std::cout << " ";
+        }
+    }
+    void printNewline() {
+        if (depth == 0) {
+            std::cout << std::endl;
+        }
+    }
     void operator()(const None &none) {
-        std::cout << "None" << std::endl;
+        std::cout << "None";
+        printNewline();
     }
     void operator()(const Integer &integer) {
-        std::cout << "Integer " << integer.value << std::endl;
+        std::cout << "Integer {" << integer.value << "}";
+        printNewline();
     }
     void operator()(const Boolean &boolean) {
-        std::cout << "Boolean " << (boolean.value ? "true" : "false")
-            << std::endl;
+        std::cout << "Boolean{" << (boolean.value ? "true" : "false") << "}";
+        printNewline();
     }
     void operator()(const String &string) {
-        std::cout << "String " << string.value << std::endl;
+        std::cout << "String{" << string.value << "}";
+        printNewline();
     }
     void operator()(const Identifier &identifier) {
-        std::cout << "Identifier " << identifier.value << std::endl;
+        std::cout << "Identifier{" << identifier.value << "}";
+        printNewline();
     }
     void operator()(const Range &range) {
-        std::cout << "Range (" << range.begin << ", "
-            << range.end << ")" << std::endl;
+        std::cout << "Range{" << range.begin << ", "
+            << range.end << "}";
+        printNewline();
     }
     void operator()(const Pair &pair) {
         std::cout << "Pair" << std::endl;
-        std::cout << "  ";
+        depth += 2;
+        printDepth();
+        std::cout << "first: ";
         std::visit(*this, *pair.first);
-        std::cout << "  ";
+        std::cout << std::endl;
+
+        printDepth();
+        std::cout << "second: ";
         std::visit(*this, *pair.second);
+        std::cout << std::endl;
+        depth -= 2;
     }
     void operator()(const List &list) {
-        std::cout << "List" << std::endl;
+        std::cout << "List";
+        depth += 2;
         for (const auto &elem : list.value) {
-            std::cout << "  ";
+            std::cout << std::endl;
+            printDepth();
             std::visit(*this, elem);
         }
+        printNewline();
+        depth -= 2;
     }
     void operator()(const Dictionary & dict) {
-        std::cout << "Dictionary" << std::endl;
+        std::cout << "Dictionary";
+        depth += 2;
         for (const auto &elem : dict.value) {
-            std::cout << "  " << elem.first << ": ";
+            std::cout << std::endl;
+            printDepth();
+            std::cout << elem.first << ": ";
             std::visit(*this, elem.second);
         }
+        depth -= 2;
+        printNewline();
     }
+private:
+    size_t depth;
 };
 
 };
@@ -300,7 +336,8 @@ int main(int argc, char *argv[]) {
   Visitor::Data result = treeVisitor.Visit(root);
 
   std::cout << "== Result ==" << std::endl;
-  std::visit(Visitor::Printer{}, result);
+  Visitor::Printer printer;
+  std::visit(printer, result);
 
   // Return 0 to indicate successful execution
   return 0;
