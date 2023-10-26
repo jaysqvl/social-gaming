@@ -6,10 +6,9 @@
 
 class SyntaxNode {
 public:
-    SyntaxNode(const std::string &type, const std::string &text, int number);
+    SyntaxNode(const std::string &type, const std::string &text);
     std::string getType(void);
     std::string getText(void);
-    int getNumber(void);
 
     size_t size(void);
     SyntaxNode &getChild(size_t index);
@@ -19,7 +18,6 @@ public:
 private:
     std::string type;
     std::string text;
-    int number;
 
     std::vector<std::unique_ptr<SyntaxNode>> children;
 };
