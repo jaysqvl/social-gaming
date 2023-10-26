@@ -8,6 +8,8 @@
 #include "Rule.hpp"
 #include "Element.hpp"
 
+#include "Game.hpp"
+
 #include <vector>
 #include <string>
 #include <map>
@@ -21,23 +23,32 @@ class GameManager {
 private:
     using RulePtr = std::shared_ptr<Rule>;
 
+    // TODO - add a vector of User
+    // User = {connection, room}
+    // TODO - add single reference to Game
+    // TODO - remove the below
+    
+
     std::vector<Connection> clients;
-    User owner;
-    std::string gameName;
-    std::pair<int, int> playerRange;
-    bool audience;
-    // Stores the setups the game has the parse and execute
-    std::vector<Setup> setups;
 
-    //TODO: FIX CIRCULAR DEPENDENCY
-    std::vector<RulePtr> rules; // game manager should have rule, but rule should not have gamemanager
 
-    std::map<std::string, ElementPtr> constants;
-    std::map<std::string, ElementPtr> variables;
 
-    //A map holding key value pairs to store a unique user's name, as well as the data for that user
-    std::shared_ptr<std::map<std::string, User>> playerMap = std::make_shared<std::map<std::string, User>>();
-    std::shared_ptr<std::map<std::string, User>> spectatorMap = std::make_shared<std::map<std::string, User>>();
+    // User owner;
+    // std::string gameName;
+    // std::pair<int, int> playerRange;
+    // bool audience;
+    // // Stores the setups the game has the parse and execute
+    // std::vector<Setup> setups;
+
+    // //TODO: FIX CIRCULAR DEPENDENCY
+    // std::vector<RulePtr> rules; // game manager should have rule, but rule should not have gamemanager
+
+    // std::map<std::string, ElementPtr> constants;
+    // std::map<std::string, ElementPtr> variables;
+
+    // //A map holding key value pairs to store a unique user's name, as well as the data for that user
+    // std::shared_ptr<std::map<std::string, User>> playerMap = std::make_shared<std::map<std::string, User>>();
+    // std::shared_ptr<std::map<std::string, User>> spectatorMap = std::make_shared<std::map<std::string, User>>();
 
 public:
     GameManager(std::string name, User owner);
