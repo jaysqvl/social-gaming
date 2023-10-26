@@ -2,6 +2,7 @@
 
 #include "Server.h"
 #include "Manager.hpp"
+#include "GameManager.hpp"
 
 #include <vector>
 #include <map>
@@ -13,7 +14,10 @@ public:
         std::string username;
     };
 
+    // TODO - add vector of GameManager
+
     GeneralManager(void);
+
 
     void onConnect(Connection conn) override;
     void onDisconnect(Connection conn) override;
@@ -25,4 +29,6 @@ private:
     std::vector<Connection> clients;
     std::map<uintptr_t, ClientInfo> info;
     bool quit;
+
+    std::vector<GameManager> gm;
 };
