@@ -11,14 +11,14 @@ uint32_t User::getId() const {
     return id;
 }
 
-std::map<std::string, ElementPtr> User::getMap() const {
-    return userMap;
-}
+// std::map<std::string, ElementPtr> User::getMap() const {
+//     return userMap;
+// }
 
 void User::setRole(UserRole newRole) {
     role = newRole;
 }
 
-UserRole User::getRole() {
+UserRole User::getRole() const {
     return role;
 }
