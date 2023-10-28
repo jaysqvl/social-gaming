@@ -1,12 +1,9 @@
-add_library(manager
-  src/GeneralManager.cpp
-  # src/GameManager.cpp
-  # src/Element.cpp
-  # src/Rule.cpp
-  src/Setup.cpp
+add_library(game
+  src/User.cpp
+  src/Game.cpp
 )
 
-target_include_directories(manager
+target_include_directories(game
   PUBLIC
     $<INSTALL_INTERFACE:include>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -14,20 +11,19 @@ target_include_directories(manager
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
-set_target_properties(manager
+set_target_properties(game
   PROPERTIES
     LINKER_LANGUAGE CXX
     CXX_STANDARD 17
 )
 
-target_link_libraries(manager
+target_link_libraries(game
   networking
   router
-  game
   ${CMAKE_THREAD_LIBS_INIT}
   tree-sitter-socialgaming
   cpp-tree-sitter
 )
-install(TARGETS manager
+install(TARGETS game
   ARCHIVE DESTINATION lib
 )
