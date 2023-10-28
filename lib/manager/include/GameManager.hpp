@@ -5,8 +5,8 @@
 #include "Server.h"
 #include "Setup.hpp"
 #include "User.hpp"
-#include "Rule.hpp"
-#include "Element.hpp"
+//#include "Rule.hpp"
+//#include "Element.hpp"
 
 #include "Game.hpp"
 
@@ -21,7 +21,7 @@ using networking::Connection;
 
 class GameManager {
 private:
-    using RulePtr = std::shared_ptr<Rule>;
+    //using RulePtr = std::shared_ptr<Rule>;
 
     // TODO - add a vector of User
     // User = {connection, room}
@@ -60,10 +60,10 @@ public:
     bool hasAudience();
 
     std::vector<Setup> getSetups();
-    std::map<std::string, ElementPtr> getConstants();
-    std::map<std::string, ElementPtr> getVariables();
+    // std::map<std::string, ElementPtr> getConstants();
+    // std::map<std::string, ElementPtr> getVariables();
 
-    std::vector<RulePtr> getRules() { return rules; }
+    //std::vector<RulePtr> getRules() { return rules; }
     void parseAndSetRules();
 
 };
