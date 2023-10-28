@@ -20,6 +20,7 @@ set_target_properties(game
 target_link_libraries(game
   networking
   router
+  visitor
   ${CMAKE_THREAD_LIBS_INIT}
   tree-sitter-socialgaming
   cpp-tree-sitter
