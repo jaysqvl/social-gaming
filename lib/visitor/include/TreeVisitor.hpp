@@ -28,6 +28,10 @@ enum class TreeVisitorType : char {
     COMMENT,
 };
 
+std::unordered_map<std::string, TreeVisitorType> treeVisitorTypeMap = {
+    
+}
+
 // Visitor::TreeVisitorType convertToEnum(std::string input) {
 //     switch (input) {
 //         case "game" return GAME,
