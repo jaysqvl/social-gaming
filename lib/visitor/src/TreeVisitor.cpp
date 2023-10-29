@@ -2,6 +2,30 @@
 
 #include <iostream>
 
+#include <unordered_map>
+
+std::unordered_map<std::string, Visitor::TreeVisitorType> treeVisitorMap = {
+    {"game", Visitor::TreeVisitorType::GAME}, 
+    {"configuration", Visitor::TreeVisitorType::CONFIGURATION},
+    {"constants", Visitor::TreeVisitorType::CONSTANTS},
+    {"variables", Visitor::TreeVisitorType::VARIABLES},
+    {"per_player", Visitor::TreeVisitorType::PER_PLAYER},
+    {"per_audience", Visitor::TreeVisitorType::PER_AUDIENCE},
+    {"rules", Visitor::TreeVisitorType::RULES},
+    {"setup_rule", Visitor::TreeVisitorType::SETUP_RULE},
+    {"value_map", Visitor::TreeVisitorType::VALUE_MAP},
+    {"map_entry", Visitor::TreeVisitorType::MAP_ENTRY},
+    {"expression", Visitor::TreeVisitorType::EXPRESSION},
+    {"list_literal", Visitor::TreeVisitorType::LIST_LITERAL},
+    {"expression_list", Visitor::TreeVisitorType::EXPRESSION_LIST},
+    {"quoted_string", Visitor::TreeVisitorType::QUOTED_STRING},
+    {"number_range", Visitor::TreeVisitorType::NUMBER_RANGE},
+    {"boolean", Visitor::TreeVisitorType::BOOLEAN},
+    {"number", Visitor::TreeVisitorType::NUMBER},
+    {"integer", Visitor::TreeVisitorType::INTEGER},
+    {"comment", Visitor::TreeVisitorType::COMMENT}
+};
+
 Visitor::TreeVisitor::TreeVisitor(const std::string &source) :
     source{source} {}
 
