@@ -7,6 +7,7 @@
 
 namespace Visitor {
 
+//an enum of node types which can be used possibly in the future with the Data class
 enum class TreeVisitorType : char {
     GAME,
     CONFIGURATION,
