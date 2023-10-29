@@ -142,13 +142,13 @@ Visitor::Data Visitor::TreeVisitor::VisitSibling(ts::Node &node) {
         node = node.getNextSibling();
         auto temp = VisitSibling(node);
         return Visitor::Pair{String{key}, temp};
-    } else if (node.getType() == "setup_rule" ||
-            node.getType() == "value_map" ||
-            node.getType() == "map_entry" ||
-            node.getType() == "quoted_string" ||
-            node.getType() == "number_range" ||
-            node.getType() == "boolean" ||
-            node.getType() == "integer") {
+    } else if (treeVisitorMap[node.getType()] == Visitor::TreeVisitorType::SETUP_RULE ||
+            treeVisitorMap[node.getType()] == Visitor::TreeVisitorType::VALUE_MAP ||
+            treeVisitorMap[node.getType()] == Visitor::TreeVisitorType::MAP_ENTRY ||
+            treeVisitorMap[node.getType()] == Visitor::TreeVisitorType::QUOTED_STRING ||
+            treeVisitorMap[node.getType()] == Visitor::TreeVisitorType::NUMBER_RANGE ||
+            treeVisitorMap[node.getType()] == Visitor::TreeVisitorType::BOOLEAN ||
+            treeVisitorMap[node.getType()] == Visitor::TreeVisitorType::INTEGER) {
         auto temp = Visit(node);
         node = node.getNextSibling();
         return temp;
