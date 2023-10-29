@@ -52,13 +52,13 @@ Visitor::Data Visitor::TreeVisitor::Visit(const ts::Node &node) {
                 }
             }
             return result;
-        } else if (type == "configuration" ||
-                type == "constants" ||
-                type == "variables" ||
-                type == "per_player" ||
-                type == "per_audience" ||
-                type == "rules" ||
-                type == "setup_rule") {
+        } else if (enumType == Visitor::TreeVisitorType::CONFIGURATION||
+                enumType == Visitor::TreeVisitorType::CONSTANTS ||
+                enumType == Visitor::TreeVisitorType::VARIABLES ||
+                enumType == Visitor::TreeVisitorType::PER_PLAYER ||
+                enumType == Visitor::TreeVisitorType::PER_AUDIENCE ||
+                enumType == Visitor::TreeVisitorType::RULES ||
+                enumType == Visitor::TreeVisitorType::SETUP_RULE) {
             if (node.getNumChildren() > 1) {
                 auto key = std::string(node.getChild(0).
                         getSourceRange(source));
@@ -68,32 +68,32 @@ Visitor::Data Visitor::TreeVisitor::Visit(const ts::Node &node) {
             } else {
                 return Visitor::None{};
             }
-        } else if (type == "value_map") {
+        } else if (enumType == Visitor::TreeVisitorType::VALUE_MAP) {
             auto child = node.getChild(0);
             return VisitSibling(child);
-        } else if (type == "map_entry") {
+        } else if (enumType == Visitor::TreeVisitorType::MAP_ENTRY) {
             auto key = std::string(node.getChild(0).
                     getSourceRange(source));
             auto value = Visit(node.getChild(2));
             return Visitor::Pair{String{key}, value};
-        } else if (type == "expression") {
+        } else if (enumType == Visitor::TreeVisitorType::EXPRESSION) {
             return Visit(node.getChild(0));
-        } else if (type == "list_literal") {
+        } else if (enumType == Visitor::TreeVisitorType::LIST_LITERAL) {
             if (node.getNumChildren() == 3) {
                 return Visit(node.getChild(1));
             } else {
                 return Visitor::List{};
             }
-        } else if (type == "expression_list") {
+        } else if (enumType == Visitor::TreeVisitorType::EXPRESSION_LIST) {
             Visitor::List result;
             for (size_t i = 0; i < node.getNumChildren(); i += 2) {
                 result.value.push_back(Visit(node.getChild(i)));
             }
             return result;
-        } else if (type == "quoted_string") {
+        } else if (enumType == Visitor::TreeVisitorType::QUOTED_STRING) {
             auto temp = std::string(node.getSourceRange(source));
             return Visitor::String{temp};
-        } else if (type == "number_range") {
+        } else if (enumType == Visitor::TreeVisitorType::NUMBER_RANGE) {
             auto begin = std::string(node.getChild(1).
                     getSourceRange(source));
             auto end = std::string(node.getChild(3).
@@ -102,13 +102,13 @@ Visitor::Data Visitor::TreeVisitor::Visit(const ts::Node &node) {
         } else if (enumType == Visitor::TreeVisitorType::BOOLEAN) {
             auto temp = node.getChild(0).getSourceRange(source);
             return Visitor::Boolean{temp[0] == 't'};
-        } else if (type == "number") {
+        } else if (enumType == Visitor::TreeVisitorType::NUMBER) {
             auto temp = std::string(node.getSourceRange(source));
             return Visitor::Integer{stoi(temp)};
-        } else if (type == "integer") {
+        } else if (enumType == Visitor::TreeVisitorType::INTEGER) {
             auto temp = std::string(node.getSourceRange(source));
             return Visitor::Identifier{temp};
-        } else if (type == "comment") {
+        } else if (enumType == Visitor::TreeVisitorType::COMMENT) {
             return Visitor::None{};
         } else {
             std::cout << "Visit " << node.getType() << std::endl;
