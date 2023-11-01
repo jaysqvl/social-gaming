@@ -1,11 +1,35 @@
 #include "TreeVisitor.hpp"
 
 #include <iostream>
-
 #include <unordered_map>
 
+namespace Visitor {
+//an enum of node types which can be used possibly in the future with the Data class
+enum class TreeVisitorType : char {
+    GAME,
+    CONFIGURATION,
+    CONSTANTS,
+    VARIABLES,
+    PER_PLAYER,
+    PER_AUDIENCE,
+    RULES,
+    SETUP_RULE,
+    VALUE_MAP,
+    MAP_ENTRY,
+    EXPRESSION,
+    LIST_LITERAL,
+    EXPRESSION_LIST,
+    QUOTED_STRING,
+    NUMBER_RANGE,
+    BOOLEAN,
+    NUMBER,
+    INTEGER,
+    COMMENT,
+};
+};
+
 std::unordered_map<std::string_view, Visitor::TreeVisitorType> treeVisitorMap = {
-    {"game", Visitor::TreeVisitorType::GAME}, 
+    {"game", Visitor::TreeVisitorType::GAME},
     {"configuration", Visitor::TreeVisitorType::CONFIGURATION},
     {"constants", Visitor::TreeVisitorType::CONSTANTS},
     {"variables", Visitor::TreeVisitorType::VARIABLES},
