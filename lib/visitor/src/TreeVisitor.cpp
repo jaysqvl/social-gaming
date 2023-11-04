@@ -1,5 +1,4 @@
 #include "TreeVisitor.hpp"
-
 #include <map>
 #include <iostream>
 
@@ -42,90 +41,126 @@ std::map<std::string_view, VisitType> visitMap = {
     { "integer", VisitType::INTEGER },
 };
 
+// Create a map that maps VisitType to member function pointers
+std::map<VisitType, Visitor::Data (Visitor::TreeVisitor::*)(const ts::Node &)> visitFunctionMap = {
+    {VisitType::GAME, &Visitor::TreeVisitor::VisitGame},
+    {VisitType::PAIR, &Visitor::TreeVisitor::VisitPair},
+    {VisitType::FIRST_CHILD, &Visitor::TreeVisitor::VisitFirstChild},
+    {VisitType::FIRST_SIBLING, &Visitor::TreeVisitor::VisitFirstSibling},
+    {VisitType::MAP_ENTRY, &Visitor::TreeVisitor::VisitMapEntry},
+    {VisitType::LIST_LITERAL, &Visitor::TreeVisitor::VisitListLiteral},
+    {VisitType::EXPRESSION_LIST, &Visitor::TreeVisitor::VisitExpressionList},
+    {VisitType::QUOTED_STRING, &Visitor::TreeVisitor::VisitQuotedString},
+    {VisitType::NUMBER_RANGE, &Visitor::TreeVisitor::VisitNumberRange},
+    {VisitType::BOOLEAN, &Visitor::TreeVisitor::VisitBoolean},
+    {VisitType::NUMBER, &Visitor::TreeVisitor::VisitNumber},
+    {VisitType::INTEGER, &Visitor::TreeVisitor::VisitInteger}
+};
+
 Visitor::Data Visitor::TreeVisitor::Visit(const ts::Node &node) {
     auto itType = visitMap.find(node.getType());
     if (itType == visitMap.end()) {
         std::cout << "Visit " << node.getType() << std::endl;
-        /*for (size_t i = 0; i < node.getNumChildren(); i++) {
-            std::cout << "  " << node.getChild(i).getType() << std::endl;
-        }*/
-
         return Visitor::None{};
     }
 
     VisitType type = itType->second;
-    if (type == VisitType::GAME) {
-        auto result = Visitor::Dictionary{};
-        size_t numChildren = node.getNumChildren();
-        for (size_t i = 0; i < numChildren; i++) {
-            auto child = node.getChild(i);
-            auto temp = Visit(child);
-
-            if (std::holds_alternative<Pair>(temp)) {
-                auto pair = std::get<Pair>(temp);
-                if (std::holds_alternative<String>(*pair.first)) {
-                    auto key = std::get<String>(*pair.first);
-                    result.value[key.value] = *pair.second;
-                }
-            }
-        }
-        return result;
-    } else if (type == VisitType::PAIR) {
-        if (node.getNumChildren() > 1) {
-            auto key = std::string(node.getChild(0).
-                    getSourceRange(source));
-            ts::Node child = node.getChild(1);
-            auto value = VisitSibling(child);
-            return Visitor::Pair(String{key}, value);
-        } else {
-            return Visitor::None{};
-        }
-    } else if (type == VisitType::FIRST_CHILD) {
-        return Visit(node.getChild(0));
-    } else if (type == VisitType::FIRST_SIBLING) {
-        auto child = node.getChild(0);
-        return VisitSibling(child);
-    } else if (type == VisitType::MAP_ENTRY) {
-        auto key = std::string(node.getChild(0).
-                getSourceRange(source));
-        auto value = Visit(node.getChild(2));
-        return Visitor::Pair{String{key}, value};
-    } else if (type == VisitType::LIST_LITERAL) {
-        if (node.getNumChildren() == 3) {
-            return Visit(node.getChild(1));
-        } else {
-            return Visitor::List{};
-        }
-    } else if (type == VisitType::EXPRESSION_LIST) {
-        Visitor::List result;
-        for (size_t i = 0; i < node.getNumChildren(); i += 2) {
-            result.value.push_back(Visit(node.getChild(i)));
-        }
-        return result;
-    } else if (type == VisitType::QUOTED_STRING) {
-        auto temp = std::string(node.getSourceRange(source));
-        return Visitor::String{temp};
-    } else if (type == VisitType::NUMBER_RANGE) {
-        auto begin = std::string(node.getChild(1).
-                getSourceRange(source));
-        auto end = std::string(node.getChild(3).
-                getSourceRange(source));
-        return Visitor::Range{std::stoi(begin), std::stoi(end)};
-    } else if (type == VisitType::BOOLEAN) {
-        auto temp = node.getChild(0).getSourceRange(source);
-        return Visitor::Boolean{temp[0] == 't'};
-    } else if (type == VisitType::NUMBER) {
-        auto temp = std::string(node.getSourceRange(source));
-        return Visitor::Integer{stoi(temp)};
-    } else if (type == VisitType::INTEGER) {
-        auto temp = std::string(node.getSourceRange(source));
-        return Visitor::Identifier{temp};
+    auto itFunction = visitFunctionMap.find(type);
+    if (itFunction != visitFunctionMap.end()) {
+        // Call the corresponding member function based on the VisitType
+        auto visitFunction = itFunction->second;
+        return (this->*visitFunction)(node);
     } else {
-        std::cout << "Visit " << (int)type << " " <<
-            node.getType() << std::endl;
-
+        std::cout << "Visit " << static_cast<int>(type) << " " << node.getType() << std::endl;
         return Visitor::None{};
     }
+}
+
+
+Visitor::Data Visitor::TreeVisitor::VisitGame(const ts::Node &node) {
+    auto result = Visitor::Dictionary{};
+    size_t numChildren = node.getNumChildren();
+    for (size_t i = 0; i < numChildren; i++) {
+        auto child = node.getChild(i);
+        auto temp = Visit(child);
+
+        if (std::holds_alternative<Pair>(temp)) {
+            auto pair = std::get<Pair>(temp);
+            if (std::holds_alternative<String>(*pair.first)) {
+                auto key = std::get<String>(*pair.first);
+                result.value[key.value] = *pair.second;
+            }
+        }
+    }
+    return result;
+}
+
+Visitor::Data Visitor::TreeVisitor::VisitPair(const ts::Node &node) {
+    if (node.getNumChildren() > 1) {
+        auto key = std::string(node.getChild(0).getSourceRange(source));
+        ts::Node child = node.getChild(1);
+        auto value = VisitSibling(child);
+        return Visitor::Pair(String{key}, value);
+    } else {
+        return Visitor::None{};
+    }
+}
+
+Visitor::Data Visitor::TreeVisitor::VisitFirstChild(const ts::Node &node) {
+    return Visit(node.getChild(0));
+}
+
+Visitor::Data Visitor::TreeVisitor::VisitFirstSibling(const ts::Node &node) {
+    auto child = node.getChild(0);
+    return VisitSibling(child);
+}
+
+Visitor::Data Visitor::TreeVisitor::VisitMapEntry(const ts::Node &node) {
+    auto key = std::string(node.getChild(0).getSourceRange(source));
+    auto value = Visit(node.getChild(2));
+    return Visitor::Pair{String{key}, value};
+}
+
+Visitor::Data Visitor::TreeVisitor::VisitListLiteral(const ts::Node &node) {
+    if (node.getNumChildren() == 3) {
+        return Visit(node.getChild(1));
+    } else {
+        return Visitor::List{};
+    }
+}
+
+Visitor::Data Visitor::TreeVisitor::VisitExpressionList(const ts::Node &node) {
+    Visitor::List result;
+    for (size_t i = 0; i < node.getNumChildren(); i += 2) {
+        result.value.push_back(Visit(node.getChild(i)));
+    }
+    return result;
+}
+
+Visitor::Data Visitor::TreeVisitor::VisitQuotedString(const ts::Node &node) {
+    auto temp = std::string(node.getSourceRange(source));
+    return Visitor::String{temp};
+}
+
+Visitor::Data Visitor::TreeVisitor::VisitNumberRange(const ts::Node &node) {
+    auto begin = std::string(node.getChild(1).getSourceRange(source));
+    auto end = std::string(node.getChild(3).getSourceRange(source));
+    return Visitor::Range{std::stoi(begin), std::stoi(end)};
+}
+
+Visitor::Data Visitor::TreeVisitor::VisitBoolean(const ts::Node &node) {
+    auto temp = node.getChild(0).getSourceRange(source);
+    return Visitor::Boolean{temp[0] == 't'};
+}
+
+Visitor::Data Visitor::TreeVisitor::VisitNumber(const ts::Node &node) {
+    auto temp = std::string(node.getSourceRange(source));
+    return Visitor::Integer{std::stoi(temp)};
+}
+
+Visitor::Data Visitor::TreeVisitor::VisitInteger(const ts::Node &node) {
+    auto temp = std::string(node.getSourceRange(source));
+    return Visitor::Identifier{temp};
 }
 
 static const std::map<std::string_view, size_t> siblingMap = {
@@ -151,9 +186,6 @@ Visitor::Data Visitor::TreeVisitor::VisitSibling(ts::Node &node) {
     auto itType = siblingMap.find(node.getType());
     if (itType == siblingMap.end()) {
         std::cout << "Sibling " << node.getType() << std::endl;
-        /*for (size_t i = 0; i < node.getNumChildren(); i++) {
-            std::cout << "  " << node.getChild(i).getType() << std::endl;
-        }*/
 
         node = node.getNextSibling();
         return Visitor::None{};
