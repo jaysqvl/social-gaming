@@ -5,44 +5,26 @@
 Visitor::TreeVisitor::TreeVisitor(const std::string &source) :
     source{source} {}
 
-//TODO: merge the two maps so theyre of type <std::string_view, Visitor::Data (Visitor::TreeVisitor::*)(const ts::Node &)>
-//(no more enum)
-std::map<std::string_view, VisitType> visitMap = {
-    { "game", VisitType::GAME },
-    { "configuration", VisitType::PAIR },
-    { "constants", VisitType::PAIR },
-    { "variables", VisitType::PAIR },
-    { "per_player", VisitType::PAIR },
-    { "per_audience", VisitType::PAIR },
-    { "rules", VisitType::PAIR },
-    { "setup_rule", VisitType::PAIR },
-    { "expression", VisitType::FIRST_CHILD },
-    { "value_map", VisitType::FIRST_SIBLING },
-    { "map_entry", VisitType::MAP_ENTRY },
-    { "list_literal", VisitType::LIST_LITERAL },
-    { "expression_list", VisitType::EXPRESSION_LIST },
-    { "quoted_string", VisitType::QUOTED_STRING },
-    { "number_range", VisitType::NUMBER_RANGE },
-    { "boolean", VisitType::BOOLEAN },
-    { "number", VisitType::NUMBER },
-    { "integer", VisitType::INTEGER },
-};
-
-// Create a map that maps VisitType to member function pointers
-std::map<VisitType, Visitor::Data (Visitor::TreeVisitor::*)(const ts::Node &)> visitFunctionMap = {
-    {VisitType::GAME, &Visitor::TreeVisitor::VisitGame},
-    {VisitType::PAIR, &Visitor::TreeVisitor::VisitPair},
-    {VisitType::FIRST_CHILD, &Visitor::TreeVisitor::VisitFirstChild},
-    {VisitType::FIRST_SIBLING, &Visitor::TreeVisitor::VisitFirstSibling},
-    {VisitType::MAP_ENTRY, &Visitor::TreeVisitor::VisitMapEntry},
-    {VisitType::LIST_LITERAL, &Visitor::TreeVisitor::VisitListLiteral},
-    {VisitType::EXPRESSION_LIST, &Visitor::TreeVisitor::VisitExpressionList},
-    {VisitType::QUOTED_STRING, &Visitor::TreeVisitor::VisitQuotedString},
-    {VisitType::NUMBER_RANGE, &Visitor::TreeVisitor::VisitNumberRange},
-    {VisitType::BOOLEAN, &Visitor::TreeVisitor::VisitBoolean},
-    {VisitType::NUMBER, &Visitor::TreeVisitor::VisitNumber},
-    {VisitType::INTEGER, &Visitor::TreeVisitor::VisitInteger}
-};
+std::map<std::string_view, Visitor::Data (Visitor::TreeVisitor::*)(const ts::Node &)> visitMap = {
+    { "game", &Visitor::TreeVisitor::VisitGame},
+    { "configuration",  &Visitor::TreeVisitor::VisitPair},
+    { "constants", &Visitor::TreeVisitor::VisitPair},
+    { "variables",  &Visitor::TreeVisitor::VisitPair},
+    { "per_player",  &Visitor::TreeVisitor::VisitPair},
+    { "per_audience",  &Visitor::TreeVisitor::VisitPair},
+    { "rules", &Visitor::TreeVisitor::VisitPair},
+    { "setup_rule",  &Visitor::TreeVisitor::VisitPair},
+    { "expression",  &Visitor::TreeVisitor::VisitFirstChild},
+    { "value_map",  &Visitor::TreeVisitor::VisitFirstSibling},
+    { "map_entry",  &Visitor::TreeVisitor::VisitMapEntry},
+    { "list_literal",  &Visitor::TreeVisitor::VisitListLiteral},
+    { "expression_list",  &Visitor::TreeVisitor::VisitExpressionList},
+    { "quoted_string",  &Visitor::TreeVisitor::VisitQuotedString},
+    { "number_range", &Visitor::TreeVisitor::VisitNumberRange},
+    { "boolean",  &Visitor::TreeVisitor::VisitBoolean},
+    { "number",  &Visitor::TreeVisitor::VisitNumber},
+    { "integer", &Visitor::TreeVisitor::VisitInteger},
+}; 
 
 //used for things that contain their own data (configuration, strings)
 Visitor::Data Visitor::TreeVisitor::Visit(const ts::Node &node) {
@@ -52,18 +34,16 @@ Visitor::Data Visitor::TreeVisitor::Visit(const ts::Node &node) {
         return Visitor::None{};
     }
 
-    VisitType type = itType->second;
-    auto itFunction = visitFunctionMap.find(type);
-    if (itFunction != visitFunctionMap.end()) {
-        // Call the corresponding member function based on the VisitType
+    auto itFunction = visitMap.find(node.getType());
+    if (itFunction != visitMap.end()) {
+        // Call the corresponding member function based on node type
         auto visitFunction = itFunction->second;
         return (this->*visitFunction)(node);
     } else {
-        std::cout << "Visit " << static_cast<int>(type) << " " << node.getType() << std::endl;
+        std::cout << "Visit " << node.getType() << std::endl;
         return Visitor::None{};
     }
 }
-
 
 Visitor::Data Visitor::TreeVisitor::VisitGame(const ts::Node &node) {
     auto result = Visitor::Dictionary{};
