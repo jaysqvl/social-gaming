@@ -8,8 +8,14 @@ namespace Visitor {
 
 class TreeVisitor {
 public:
+
+    //suggestion: 
+    //add a new entry point (call it Data Parse(const ts::Node &node) and make Visit and VisitSibling private (for better design))
     TreeVisitor(const std::string &source);
     Data Visit(const ts::Node &node);
+    Data VisitSibling(ts::Node &node);
+
+private: //functions
     Data VisitGame(const ts::Node &node);
     Data VisitPair(const ts::Node &node);
     Data VisitFirstChild(const ts::Node &node);
@@ -22,8 +28,8 @@ public:
     Data VisitBoolean(const ts::Node &node);
     Data VisitNumber(const ts::Node &node);
     Data VisitInteger(const ts::Node &node);
-    Data VisitSibling(ts::Node &node);
-private:
+
+private: //fields
     std::string source;
    
 };

@@ -5,21 +5,8 @@
 Visitor::TreeVisitor::TreeVisitor(const std::string &source) :
     source{source} {}
 
-enum class VisitType {
-    GAME,
-    PAIR,
-    FIRST_CHILD,
-    FIRST_SIBLING,
-    MAP_ENTRY,
-    LIST_LITERAL,
-    EXPRESSION_LIST,
-    QUOTED_STRING,
-    NUMBER_RANGE,
-    BOOLEAN,
-    NUMBER,
-    INTEGER,
-};
-
+//TODO: merge the two maps so theyre of type <std::string_view, Visitor::Data (Visitor::TreeVisitor::*)(const ts::Node &)>
+//(no more enum)
 std::map<std::string_view, VisitType> visitMap = {
     { "game", VisitType::GAME },
     { "configuration", VisitType::PAIR },
@@ -57,6 +44,7 @@ std::map<VisitType, Visitor::Data (Visitor::TreeVisitor::*)(const ts::Node &)> v
     {VisitType::INTEGER, &Visitor::TreeVisitor::VisitInteger}
 };
 
+//used for things that contain their own data (configuration, strings)
 Visitor::Data Visitor::TreeVisitor::Visit(const ts::Node &node) {
     auto itType = visitMap.find(node.getType());
     if (itType == visitMap.end()) {
@@ -163,6 +151,9 @@ Visitor::Data Visitor::TreeVisitor::VisitInteger(const ts::Node &node) {
     return Visitor::Identifier{temp};
 }
 
+//TODO: create a visit for For struct
+
+//todo: merge/convert map to same as above
 static const std::map<std::string_view, size_t> siblingMap = {
     { "{", 1 },
     { "}", 2 },
@@ -181,7 +172,6 @@ static const std::map<std::string_view, size_t> siblingMap = {
     { "map_entry", 4 },
     { "integer", 4 },
 };
-
 Visitor::Data Visitor::TreeVisitor::VisitSibling(ts::Node &node) {
     auto itType = siblingMap.find(node.getType());
     if (itType == siblingMap.end()) {
@@ -211,13 +201,20 @@ Visitor::Data Visitor::TreeVisitor::VisitSibling(ts::Node &node) {
 
         node = node.getNextSibling();
         return result;
-    } else if (type == 3) {
+    } 
+    //this means that the key has a "meaningful" sibling value (setup has a meaningful sibling)
+    // specifically key value pairs
+    else if (type == 3) {
         auto strType = node.getType();
         auto key = std::string(strType.substr(0, strType.size() - 1));
         node = node.getNextSibling();
         auto temp = VisitSibling(node);
         return Visitor::Pair{String{key}, temp};
-    } else if (type == 4) {
+    } 
+    //this means that the key itself contains its own meaning (just needs to be visited)
+    //don't want to visit the sibling, we want it to visit itself.
+    //type 4 is primitive values
+    else if (type == 4) {
         auto temp = Visit(node);
         node = node.getNextSibling();
         return temp;
