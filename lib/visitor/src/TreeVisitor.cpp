@@ -45,6 +45,88 @@ Visitor::Data Visitor::TreeVisitor::Visit(const ts::Node &node) {
     }
 }
 
+static const std::map<std::string_view, Visitor::Data (Visitor::TreeVisitor::*)(ts::Node &)> siblingMap = {
+    { "{",  &Visitor::TreeVisitor::getDictionarySibling},
+
+    //TODO: needs to be handled in another way
+    { "}", &Visitor::TreeVisitor::handleClosingBracket},
+    //change the function name and declaration in TreeVisitor.hpp as you see fit
+
+    { "name:", &Visitor::TreeVisitor::getKVPSibling},
+    { "player range:", &Visitor::TreeVisitor::getKVPSibling},
+    { "audience:", &Visitor::TreeVisitor::getKVPSibling},
+    { "setup:", &Visitor::TreeVisitor::getKVPSibling},
+    { "kind:", &Visitor::TreeVisitor::getKVPSibling},
+    { "prompt:", &Visitor::TreeVisitor::getKVPSibling},
+    { "range:", &Visitor::TreeVisitor::getKVPSibling},
+    { "value_map", &Visitor::TreeVisitor::getPrimitiveType},
+    { "quoted_string", &Visitor::TreeVisitor::getPrimitiveType},
+    { "number_range", &Visitor::TreeVisitor::getPrimitiveType},
+    { "boolean", &Visitor::TreeVisitor::getPrimitiveType},
+    { "setup_rule", &Visitor::TreeVisitor::getPrimitiveType},
+    { "map_entry", &Visitor::TreeVisitor::getPrimitiveType},
+    { "integer", &Visitor::TreeVisitor::getPrimitiveType},
+};
+
+Visitor::Data Visitor::TreeVisitor::VisitSibling(ts::Node &node) {
+    auto itFunction = siblingMap.find(node.getType());
+    if (itFunction == siblingMap.end()) {
+        std::cout << "Sibling " << node.getType() << std::endl;
+
+        node = node.getNextSibling();
+        return Visitor::None{};
+    } else {
+        auto visitFunction = itFunction->second;
+        return (this->*visitFunction)(node);
+    }
+}
+
+Visitor::Data Visitor::TreeVisitor::getDictionarySibling(ts::Node &node) {
+    Visitor::Dictionary result;
+        node = node.getNextSibling();
+
+        auto itType = siblingMap.find(node.getType());
+        //attn Matt - this line used type 2 of the original dict which caused compile errors
+        while (itType == siblingMap.end() || itType->second != &Visitor::TreeVisitor::handleClosingBracket) {
+        //while (itType == siblingMap.end()) {
+            auto temp = VisitSibling(node);
+            if (std::holds_alternative<Pair>(temp)) {
+                auto pair = std::get<Pair>(temp);
+                if (std::holds_alternative<String>(*pair.first)) {
+                    auto key = std::get<String>(*pair.first);
+                    result.value[key.value] = *pair.second;
+                }
+            }
+            itType = siblingMap.find(node.getType());
+        }
+
+        node = node.getNextSibling();
+        return result;
+}
+
+//this means that the key has a "meaningful" sibling value (setup has a meaningful sibling)
+//specifically key value pairs
+Visitor::Data Visitor::TreeVisitor::getKVPSibling(ts::Node &node) {
+    auto strType = node.getType();
+    auto key = std::string(strType.substr(0, strType.size() - 1));
+    node = node.getNextSibling();
+    auto temp = VisitSibling(node);
+    return Visitor::Pair{String{key}, temp};
+}
+
+//this means that the key itself contains its own meaning (just needs to be visited)
+//don't want to visit the sibling, we want it to visit itself.
+Visitor::Data Visitor::TreeVisitor::getPrimitiveType(ts::Node &node) {
+    auto temp = Visit(node);
+    node = node.getNextSibling();
+    return temp;
+}
+
+//TODO: implement
+Visitor::Data Visitor::TreeVisitor::handleClosingBracket(ts::Node &node) {
+    return Visitor::None{};
+}
+
 Visitor::Data Visitor::TreeVisitor::VisitGame(const ts::Node &node) {
     auto result = Visitor::Dictionary{};
     size_t numChildren = node.getNumChildren();
@@ -132,77 +214,3 @@ Visitor::Data Visitor::TreeVisitor::VisitInteger(const ts::Node &node) {
 }
 
 //TODO: create a visit for For struct
-
-//todo: merge/convert map to same as above
-static const std::map<std::string_view, size_t> siblingMap = {
-    { "{", 1 },
-    { "}", 2 },
-    { "name:", 3 },
-    { "player range:", 3 },
-    { "audience:", 3 },
-    { "setup:", 3 },
-    { "kind:", 3 },
-    { "prompt:", 3 },
-    { "range:", 3 },
-    { "value_map", 4 },
-    { "quoted_string", 4 },
-    { "number_range", 4 },
-    { "boolean", 4 },
-    { "setup_rule", 4 },
-    { "map_entry", 4 },
-    { "integer", 4 },
-};
-Visitor::Data Visitor::TreeVisitor::VisitSibling(ts::Node &node) {
-    auto itType = siblingMap.find(node.getType());
-    if (itType == siblingMap.end()) {
-        std::cout << "Sibling " << node.getType() << std::endl;
-
-        node = node.getNextSibling();
-        return Visitor::None{};
-    }
-
-    size_t type = itType->second;
-    if (type == 1) {
-        Visitor::Dictionary result;
-        node = node.getNextSibling();
-
-        itType = siblingMap.find(node.getType());
-        while (itType == siblingMap.end() || itType->second != 2) {
-            auto temp = VisitSibling(node);
-            if (std::holds_alternative<Pair>(temp)) {
-                auto pair = std::get<Pair>(temp);
-                if (std::holds_alternative<String>(*pair.first)) {
-                    auto key = std::get<String>(*pair.first);
-                    result.value[key.value] = *pair.second;
-                }
-            }
-            itType = siblingMap.find(node.getType());
-        }
-
-        node = node.getNextSibling();
-        return result;
-    } 
-    //this means that the key has a "meaningful" sibling value (setup has a meaningful sibling)
-    // specifically key value pairs
-    else if (type == 3) {
-        auto strType = node.getType();
-        auto key = std::string(strType.substr(0, strType.size() - 1));
-        node = node.getNextSibling();
-        auto temp = VisitSibling(node);
-        return Visitor::Pair{String{key}, temp};
-    } 
-    //this means that the key itself contains its own meaning (just needs to be visited)
-    //don't want to visit the sibling, we want it to visit itself.
-    //type 4 is primitive values
-    else if (type == 4) {
-        auto temp = Visit(node);
-        node = node.getNextSibling();
-        return temp;
-    } else {
-        std::cout << "Sibling " << type << " " <<
-            node.getType() << std::endl;
-
-        node = node.getNextSibling();
-        return Visitor::None{};
-    }
-}

@@ -30,6 +30,13 @@ public:
     Data VisitNumber(const ts::Node &node);
     Data VisitInteger(const ts::Node &node);
 
+    Data getDictionarySibling(ts::Node &node);
+    Data getKVPSibling(ts::Node &node);
+    Data getPrimitiveType(ts::Node &node);
+
+    //TODO: implement function to handle case 2 (squiggly closing bracket);
+    Data handleClosingBracket(ts::Node &node);
+
 private: //fields
     std::string source;
    
