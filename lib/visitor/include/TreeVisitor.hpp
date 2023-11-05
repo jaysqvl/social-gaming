@@ -15,7 +15,8 @@ public:
     Data Visit(const ts::Node &node);
     Data VisitSibling(ts::Node &node);
 
-private: //functions
+    //functions
+    //TODO: make the design so that the below functions can remain private
     Data VisitGame(const ts::Node &node);
     Data VisitPair(const ts::Node &node);
     Data VisitFirstChild(const ts::Node &node);
