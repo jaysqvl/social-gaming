@@ -17,6 +17,10 @@ struct Range;
 struct Pair;
 struct List;
 struct Dictionary;
+
+//rules Data structs; add as we go
+struct For;
+
 using Data = std::variant<
     None, Integer, Boolean,
     String, Identifier, Range,
