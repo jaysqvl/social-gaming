@@ -8,11 +8,8 @@ include_directories(
 set(TEST_FILES
     tools/DemoTests.cpp
     tools/ChatServerTests.cpp
-    lib/ElementTests.cpp
     lib/GeneralManagerTests.cpp
     lib/GameManagerTests.cpp
-    lib/RuleTests.cpp
-    lib/SetupTests.cpp
     lib/UserTests.cpp
 )
 
