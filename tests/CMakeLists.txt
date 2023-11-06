@@ -1,4 +1,4 @@
-#[[ Include GoogleTest headers
+# Include GoogleTest headers
 include_directories(
     ${PROJECT_SOURCE_DIR}/lib/googletest/googletest/include
     ${PROJECT_SOURCE_DIR}/lib/googletest/googlemock/include
@@ -32,4 +32,3 @@ target_link_libraries(runAllTests
 
 # Link against your modules (if they are in a library or executable)
 # target_link_libraries(runUnitTests ChatServer)
-]]

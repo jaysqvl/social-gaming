@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-//#include <gmock/gmock.h> temp
+#include <gmock/gmock.h>
 
 #include "Server.h"
 #include "GeneralManager.hpp"
