@@ -10,6 +10,7 @@ namespace Visitor {
 
 struct None;
 struct Integer;
+struct Double;
 struct Boolean;
 struct String;
 struct Identifier;
@@ -18,7 +19,7 @@ struct Pair;
 struct List;
 struct Dictionary;
 using Data = std::variant<
-    None, Integer, Boolean,
+    None, Integer, Double, Boolean,
     String, Identifier, Range,
     Pair, List, Dictionary
 >;
@@ -27,6 +28,10 @@ struct None {};
 
 struct Integer {
     int value;
+};
+
+struct Double {
+    double value;
 };
 
 struct Boolean {
