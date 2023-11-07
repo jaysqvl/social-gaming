@@ -23,7 +23,6 @@ target_link_libraries(runAllTests
         gmock
         gmock_main
         manager
-        web-socket-networking
         router
         syntax)
 

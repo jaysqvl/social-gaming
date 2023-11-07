@@ -32,21 +32,24 @@ TEST(UserTests, getIdTest) {
     ASSERT_EQ(id3, user3.getId());
 }
 
-TEST(UserTests, getMapTest) {
-    std::string name = "Bob";
-    uint32_t id = 1;
-    User user(name, id);
+// DISABLED because we removed our implementation of getMap
+// TEST(UserTests, getMapTest) {
+//     std::string name = "Bob";
+//     uint32_t id = 1;
+//     User user(name, id);
 
-    ASSERT_EQ(NULL, user.getMap());
-}
+//     ASSERT_EQ(NULL, user.getMap());
+// }
 
 TEST(UserTests, getRoleTest) {
     std::string name = "Bob";
     uint32_t id = 1;
     User user(name, id);
 
-    ASSERT_EQ(NULL, user.getRole());
+    // Check if the default role is Audience
+    ASSERT_EQ(UserRole::Audience, user.getRole());
 
+    // Set different roles and assert they are set correctly
     user.setRole(UserRole::Owner);
     ASSERT_EQ(UserRole::Owner, user.getRole());
 

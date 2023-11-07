@@ -12,8 +12,8 @@
 using namespace testing;
 
 TEST(GameManagerTests, AddRmCheckPlayer) {
-    User testOwner = User("Bob GM", "0");
-    testOwner.setRole(UserRole::GAME_OWNER);
+    User testOwner = User("Bob GM", 0);
+    testOwner.setRole(UserRole::Owner);
 
     GameManager gm("TestGame", testOwner);
 
@@ -23,21 +23,22 @@ TEST(GameManagerTests, AddRmCheckPlayer) {
     EXPECT_TRUE(gm.hasPlayer("Jerry")); // Checking if Jerry was added
 
     EXPECT_TRUE(gm.removePlayer("Jerry"));
-    EXPECT_TRUE(gm.hasPlayer("Jerry")); // Checking if Jerry was removed
+    EXPECT_FALSE(gm.hasPlayer("Jerry")); // Should be EXPECT_FALSE because Jerry should be removed
 }
 
+
 TEST(GameManagerTests, AddRmCheckSpectators) {
-    User testOwner = User("Bob GM", "0");
-    testOwner.setRole(UserRole::GAME_OWNER);
+    User testOwner = User("Bob GM", 0);
+    testOwner.setRole(UserRole::Owner);
 
     GameManager gm("TestGame", testOwner);
     EXPECT_FALSE(gm.hasAudience());  // Assuming no spectators initially
     
-    gm.addSpectator("Spectator1");
-    EXPECT_TRUE(gm.hasAudience());  // Assuming at least one spectator exists
+    EXPECT_TRUE(gm.addSpectator("Spectator1"));
+    EXPECT_TRUE(gm.hasAudience());  // Checking if Spectator1 was added
     
-    gm.removeSpectator("Spectator1");
-    EXPECT_FALSE(gm.hasAudience());  // Assuming no spectators exist
+    EXPECT_TRUE(gm.removeSpectator("Spectator1"));
+    EXPECT_FALSE(gm.hasAudience());  // Checking if Spectator1 was removed
 }
 
 // More tests can be added though at the moment, GameManager does not have full implementations/setup
