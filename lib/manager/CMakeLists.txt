@@ -1,6 +1,6 @@
 add_library(manager
   src/GeneralManager.cpp
-  src/GameManager.cpp
+  # src/GameManager.cpp
   # src/Element.cpp
   # src/Rule.cpp
   src/Setup.cpp
