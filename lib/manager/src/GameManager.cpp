@@ -25,10 +25,6 @@ GameManager::GameManager(std::string name, User owner) :
     owner(owner),
     gameName(name),
     audience(false),
-    playerRange(std::make_pair(2, 8)) { //temp playerRange value
-    // Initialize the GameManager with the owner and game name
-    // Set the initial conditions
-    // Adjust playerRange as needed
 }
 
 // Add a player with the given name

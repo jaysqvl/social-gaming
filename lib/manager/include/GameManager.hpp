@@ -4,11 +4,11 @@
 //none of these files should be circularly depending on this EXCEPT for GeneralManager.
 #include "Server.h"
 #include "Setup.hpp"
-#include "User.hpp"
 //#include "Rule.hpp"
 //#include "Element.hpp"
 
 #include "Game.hpp"
+#include "User.hpp"
 
 #include <vector>
 #include <string>
@@ -30,25 +30,14 @@ private:
     
 
     std::vector<Connection> clients;
+    std::vector<User> players;
+    std::vector<User> spectators;
 
-
-
-    // User owner;
-    // std::string gameName;
-    // std::pair<int, int> playerRange;
-    // bool audience;
-    // // Stores the setups the game has the parse and execute
-    // std::vector<Setup> setups;
-
-    // //TODO: FIX CIRCULAR DEPENDENCY
-    // std::vector<RulePtr> rules; // game manager should have rule, but rule should not have gamemanager
-
-    // std::map<std::string, ElementPtr> constants;
-    // std::map<std::string, ElementPtr> variables;
-
-    // //A map holding key value pairs to store a unique user's name, as well as the data for that user
-    // std::shared_ptr<std::map<std::string, User>> playerMap = std::make_shared<std::map<std::string, User>>();
-    // std::shared_ptr<std::map<std::string, User>> spectatorMap = std::make_shared<std::map<std::string, User>>();
+    User owner;
+    std::string gameName;
+    bool audience;
+    // Stores the setups the game has the parse and execute
+    std::vector<Setup> setups;
 
 public:
     GameManager(std::string name, User owner);
