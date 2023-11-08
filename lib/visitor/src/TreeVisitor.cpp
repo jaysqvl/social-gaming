@@ -19,6 +19,7 @@ enum class VisitType {
     BOOLEAN,
     NUMBER,
     INTEGER,
+    RULES,
 };
 
 std::map<std::string_view, VisitType> visitMap = {
@@ -28,7 +29,7 @@ std::map<std::string_view, VisitType> visitMap = {
     { "variables", VisitType::PAIR },
     { "per_player", VisitType::PAIR },
     { "per_audience", VisitType::PAIR },
-    { "rules", VisitType::PAIR },
+    // { "rules", VisitType::PAIR },
     { "setup_rule", VisitType::PAIR },
     { "expression", VisitType::FIRST_CHILD },
     { "value_map", VisitType::FIRST_SIBLING },
@@ -40,6 +41,7 @@ std::map<std::string_view, VisitType> visitMap = {
     { "boolean", VisitType::BOOLEAN },
     { "number", VisitType::NUMBER },
     { "integer", VisitType::INTEGER },
+    { "rules", VisitType::RULES },
 };
 
 Visitor::Data Visitor::TreeVisitor::Visit(const ts::Node &node) {
@@ -120,13 +122,150 @@ Visitor::Data Visitor::TreeVisitor::Visit(const ts::Node &node) {
     } else if (type == VisitType::INTEGER) {
         auto temp = std::string(node.getSourceRange(source));
         return Visitor::Identifier{temp};
-    } else {
+    } else if(type == VisitType::RULES) {
+        auto key = std::string(node.getChild(0).
+                    getSourceRange(source));
+        return Visitor::Pair(String{key}, ParseRules(node));
+    }
+
+    else {
         std::cout << "Visit " << (int)type << " " <<
             node.getType() << std::endl;
 
         return Visitor::None{};
     }
 }
+
+Visitor::Data Visitor::TreeVisitor::ParseRules(const ts::Node &node) {
+    Visitor::List rulesData;
+    Visitor::Dictionary discardData;
+
+    // Loop through the children of the "rules" section
+    size_t numChildren = node.getNumChildren();
+    for (size_t i = 0; i < numChildren; i++) {
+        ts::Node child = node.getChild(i);
+
+        if (child.getType() == "for") {
+            ts::Node loopBodyNode = child.getChild(4);
+            Visitor::Data loopBodyData = ParseLoopBody(loopBodyNode);
+            rulesData.value.push_back(loopBodyData);
+        }
+    }
+
+    return rulesData;
+}
+
+Visitor::Data Visitor::TreeVisitor::ParseLoopBody(const ts::Node &node) {
+    Visitor::List loopBodyData;
+
+    if (node.getType() == "{") {
+        // Loop through the children of the loop body
+        size_t numChildren = node.getNumChildren();
+        size_t i = 0;
+
+        while (i < numChildren) {
+            ts::Node childNode = node.getChild(i);
+
+            // Check for specific constructs within the loop body
+            if (childNode.getType() == "match") {
+                // Parse the "match" statement
+                Visitor::Dictionary matchStatementData;
+
+                // Get the match condition (e.g., !players.elements.weapon.contains(weapon.name))
+                ts::Node conditionNode = childNode.getChild(1);
+                Visitor::Data conditionData = ParseMatchCondition(conditionNode);
+
+                matchStatementData.value["condition"] = conditionData;
+
+                // Get the true branch
+                ts::Node trueBranchNode = childNode.getChild(3);
+                Visitor::Data trueBranchData = ParseTrueBranch(trueBranchNode);
+
+                matchStatementData.value["true"] = trueBranchData;
+                loopBodyData.value.push_back(matchStatementData);
+
+                i += 4; // Skip "match", condition, "{", and true branch
+            } else {
+                // Handle other constructs or statements within the loop body as needed
+                i++;
+            }
+        }
+    }
+
+    return loopBodyData;
+}
+
+Visitor::Data Visitor::TreeVisitor::ParseMatchCondition(const ts::Node &node) {
+    std::string conditionText = std::string(node.getSourceRange(source));
+
+    // Tokenize the condition text based on operators and parentheses
+    std::vector<std::string> tokens;
+    std::string currentToken;
+    bool insideParentheses = false;
+
+    for (char c : conditionText) {
+        if (c == '(') {
+            insideParentheses = true;
+        }
+        if (c == ')') {
+            insideParentheses = false;
+        }
+
+        if (c == ' ' && !insideParentheses) {
+            if (!currentToken.empty()) {
+                tokens.push_back(currentToken);
+                currentToken.clear();
+            }
+        } else {
+            currentToken += c;
+        }
+    }
+
+    if (!currentToken.empty()) {
+        tokens.push_back(currentToken);
+    }
+
+    // Parse the tokens to extract relevant information
+    std::string object;
+    std::string method; 
+    std::string argument;
+
+    if (tokens.size() >= 4) {
+        object = tokens[1];
+        method = tokens[2];
+        argument = tokens[3];
+    }
+
+    Visitor::Dictionary conditionData;
+    conditionData.value["object"] = Visitor::String{object};
+    conditionData.value["method"] = Visitor::String{method};
+    conditionData.value["argument"] = Visitor::String{argument};
+
+    return conditionData;
+}
+
+// Visitor::Data Visitor::TreeVisitor::ParseDiscardStatement(const ts::Node &node) {
+//     // Handle parsing of "discard" statements within the loop body
+// }
+
+Visitor::Data Visitor::TreeVisitor::ParseTrueBranch(const ts::Node &node) {
+    Visitor::List trueBranchData;
+
+    if (node.getType() == "{") {
+        size_t numChildren = node.getNumChildren();
+        size_t i = 0;
+
+        while (i < numChildren) {
+            ts::Node childNode = node.getChild(i);
+
+            // TODO: Handle statements within the true branch
+            i++;
+        }
+    }
+
+    return trueBranchData;
+}
+
 
 static const std::map<std::string_view, size_t> siblingMap = {
     { "{", 1 },
@@ -145,6 +284,7 @@ static const std::map<std::string_view, size_t> siblingMap = {
     { "setup_rule", 4 },
     { "map_entry", 4 },
     { "integer", 4 },
+    {"rules", 5},
 };
 
 Visitor::Data Visitor::TreeVisitor::VisitSibling(ts::Node &node) {
@@ -189,7 +329,13 @@ Visitor::Data Visitor::TreeVisitor::VisitSibling(ts::Node &node) {
         auto temp = Visit(node);
         node = node.getNextSibling();
         return temp;
-    } else {
+    } else if(type == 5) {
+        auto temp = Visit(node);
+        node = node.getNextSibling();
+        return temp;
+    }
+    
+    else {
         std::cout << "Sibling " << type << " " <<
             node.getType() << std::endl;
 
