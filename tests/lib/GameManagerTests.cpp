@@ -26,7 +26,6 @@ TEST(GameManagerTests, AddRmCheckPlayer) {
     EXPECT_FALSE(gm.hasPlayer("Jerry")); // Should be EXPECT_FALSE because Jerry should be removed
 }
 
-
 TEST(GameManagerTests, AddRmCheckSpectators) {
     User testOwner = User("Bob GM", 0);
     testOwner.setRole(UserRole::Owner);
