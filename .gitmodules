@@ -1,3 +1,6 @@
 [submodule "lib/web-socket-networking"]
 	path = lib/web-socket-networking
 	url = https://github.com/nsumner/web-socket-networking.git
+[submodule "lib/googletest"]
+	path = lib/googletest
+	url = https://github.com/google/googletest.git
