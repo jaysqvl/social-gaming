@@ -1,6 +1,7 @@
 add_library(game
   src/User.cpp
   src/Game.cpp
+  src/Config.cpp
 )
 
 target_include_directories(game

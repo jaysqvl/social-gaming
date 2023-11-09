@@ -3,7 +3,7 @@
 
 //none of these files should be circularly depending on this EXCEPT for GeneralManager.
 #include "Server.h"
-#include "Setup.hpp"
+#include "Config.hpp"
 //#include "Rule.hpp"
 //#include "Element.hpp"
 
@@ -29,15 +29,17 @@ private:
     // TODO - remove the below
     
 
-    std::vector<Connection> clients;
+    std::vector<Connection> all_game_clients;
     std::vector<User> players;
     std::vector<User> spectators;
 
+    Game game;
     User owner;
     std::string gameName;
     bool audience;
+    
     // Stores the setups the game has the parse and execute
-    std::vector<Setup> setups;
+    std::vector<Config> configs;
 
 public:
     GameManager(std::string name, User owner);
@@ -48,7 +50,7 @@ public:
     bool hasPlayer(std::string name);
     bool hasAudience();
 
-    std::vector<Setup> getSetups();
+    std::vector<Config> getConfigs();
     // std::map<std::string, ElementPtr> getConstants();
     // std::map<std::string, ElementPtr> getVariables();
 

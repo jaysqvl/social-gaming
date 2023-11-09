@@ -22,3 +22,8 @@ void User::setRole(UserRole newRole) {
 UserRole User::getRole() const {
     return role;
 }
+
+bool User::operator==(const User& other) const {
+    // Compare the members of the User object to determine equality
+    return this->id == other.id; // or this->name == other.name
+}

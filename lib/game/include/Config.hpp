@@ -5,11 +5,11 @@
 #include <string>
 #include <map>
 
-class Setup {
+class Config {
 private:
 
     enum class GameKind {
-        BOOOLEAN,
+        BOOLEAN,
         STRING,
         ENUM,
         QUESTION_ANSWER,
@@ -27,7 +27,7 @@ private:
     nlohmann::json jsonData;
 
 public:
-    Setup(const std::string &gameName, const GameKind &gameKind, const std::string &userPrompt, int defaultChoice);
+    Config(const std::string &gameName, const GameKind &gameKind, const std::string &userPrompt, int defaultChoice);
     nlohmann::json parseJsonString(const std::string& jsonString);
     nlohmann::json parseJsonFile(const std::string& filename);
 

@@ -27,6 +27,7 @@ private:
 
 public:
     User(std::string name, uint32_t id);
+    bool operator==(const User& other) const;
     std::string getName() const;
     uint32_t getId() const;
     // std::map<std::string, ElementPtr> getMap() const;

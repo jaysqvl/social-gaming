@@ -1,4 +1,4 @@
-#include "Setup.hpp"
+#include "Config.hpp"
 #include "json.hpp"
 
 #include <iostream>
@@ -6,10 +6,10 @@
 
 using json = nlohmann::json;
 
-Setup::Setup(const std::string &gameName, const GameKind &gameKind, const std::string &userPrompt, int defaultChoice):
+Config::Config(const std::string &gameName, const GameKind &gameKind, const std::string &userPrompt, int defaultChoice):
     name{gameName}, kind{gameKind}, prompt{userPrompt}, defaultOption{defaultChoice} {};
 
-json Setup::parseJsonString(const std::string &jsonString) {
+json Config::parseJsonString(const std::string &jsonString) {
     // try {
     //     return json::parse(jsonString);
     // }
@@ -21,7 +21,7 @@ json Setup::parseJsonString(const std::string &jsonString) {
 }
 
 
-json Setup::parseJsonFile(const std::string &filename) {
+json Config::parseJsonFile(const std::string &filename) {
     //  std::ifstream file(filename, std::ios_base::binary | std::ios_base::in);
 
     // if (!file.is_open()) {

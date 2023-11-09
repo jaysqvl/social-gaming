@@ -77,8 +77,8 @@ bool GameManager::hasAudience() {
     return !spectatorMap->empty();
 }
 
-std::vector<Setup> GameManager::getSetups() {
-    return setups;
+std::vector<Config> GameManager::getConfigs() {
+    return configs;
 }
 
 // std::map<std::string, ElementPtr> GameManager::getConstants() {
