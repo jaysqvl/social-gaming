@@ -6,6 +6,8 @@ target_sources(tree-sitter-demo
 target_link_libraries(tree-sitter-demo
   tree-sitter-socialgaming
   cpp-tree-sitter
+  syntax
+  visitor
 )
 
 install(TARGETS tree-sitter-demo
