@@ -4,8 +4,16 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <map>
+#include <memory>
 
 #include <cpp-tree-sitter.h>
+#include "SyntaxNode.hpp"
+#include "SyntaxGenerator.hpp"
+
+#include "Data.hpp"
+#include "Printer.hpp"
+#include "TreeVisitor.hpp"
 
 // Declare an external C function that provides the Tree-sitter language
 extern "C" {
@@ -42,15 +50,26 @@ int main(int argc, char *argv[]) {
   loadFile(sourcecode, filename);
 
   // Print the source code to the standard output
-  std::cout << sourcecode << std::endl;
+  // std::cout << sourcecode << std::endl;
 
   // Parse the source code using the Tree-sitter parser
   ts::Tree tree = parser.parseString(sourcecode);
   ts::Node root = tree.getRootNode();
 
   // Get the syntax tree in S-expression format and print it
-  auto treestring = root.getSExpr();
-  printf("Syntax tree: %s\n", treestring.get());
+  // auto treestring = root.getSExpr();
+  // printf("Syntax tree: %s\n", treestring.get());
+
+  // SyntaxGenerator gen{sourcecode};
+  // auto syntax = gen.generate(filename, root);
+  // syntax->print(0);
+
+  Visitor::TreeVisitor treeVisitor{sourcecode};
+  Visitor::Data result = treeVisitor.Visit(root);
+
+  std::cout << "== Result ==" << std::endl;
+  Visitor::Printer printer;
+  std::visit(printer, result);
 
   // Return 0 to indicate successful execution
   return 0;

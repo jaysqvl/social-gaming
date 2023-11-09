@@ -81,6 +81,18 @@ bool GameManager::hasAudience() {
     return !spectatorMap->empty();
 }
 
+std::vector<Setup> GameManager::getSetups() {
+    return setups;
+}
+
+// std::map<std::string, ElementPtr> GameManager::getConstants() {
+//     return constants;
+// }
+
+// std::map<std::string, ElementPtr> GameManager::getVariables() {
+//     return variables;
+// }
+
 bool ends_with(const std::string_view &str, const std::string_view &end) {
     if (end.size() > str.size()) {
         return false;
