@@ -29,7 +29,7 @@ GameManager::GameManager(std::string name, User owner) :
 
 // Add a player with the given name
 bool GameManager::addPlayer(std::string name) {
-    if (playerMap->size() >= playerRange.first && playerMap->size() < playerRange.second) {
+    if (players->size() >= playerRange.first && playerMap->size() < playerRange.second) {
         // Check if the number of players is within the allowed range
         auto result = playerMap->emplace(name, User(name, playerMap->size() + 1));
         return result.second; // Return true if the insertion was successful
