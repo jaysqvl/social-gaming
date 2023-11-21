@@ -117,7 +117,9 @@ struct SetupRuleNode : public Node {
 };
 
 struct ValueMapNode : public Node {
+    std::map<std::unique_ptr<StringNode>, std::unique_ptr<StringNode>> values;
     ValueMapNode(void);
+    ValueMapNode(std::map<std::unique_ptr<StringNode>, std::unique_ptr<StringNode>> values);
     void accept(Visitor &visitor) override;
 };
 
@@ -354,6 +356,11 @@ Visitor::ValueMapNode::ValueMapNode(void) {
 
 }
 
+Visitor::ValueMapNode::ValueMapNode(std::map<std::unique_ptr<StringNode>, std::unique_ptr<StringNode>> values) : 
+values(std::move(values)) {
+
+}
+
 void Visitor::ValueMapNode::accept(Visitor &visitor) {
     visitor.visit(*this);
 }
@@ -557,16 +564,25 @@ Visitor::Parser::visitSetupRule(const ts::Node &node) {
 std::unique_ptr<Visitor::ValueMapNode>
 Visitor::Parser::visitValueMap(const ts::Node &node) {
     ts::Cursor cursor = node.getCursor();
+    std::map<std::unique_ptr<StringNode>, std::unique_ptr<StringNode>> values;
     if (cursor.gotoFirstChild()) {
         do {
             ts::Node child = cursor.getCurrentNode();
-            // std::cout << child.getType() << child.getSymbol() << std::endl;
+            //std::cout << child.getType() << child.getSymbol() << std::endl << std::endl;
             if (child.getSymbol() == 127) {
                 // result->setupRules.push_back(visitSetupRule(child));
+
+                //Matt - please look into why this code doesn't work; if this stayys commented it will compile
+                
+                // const ts::Node identifier = child.getChildByFieldName("identifier");
+                // std::unique_ptr<StringNode> key = visitString(child.getChildByFieldName("identifier"));
+                // const ts::Node expression = child.getChildByFieldName("expression");
+                // std::unique_ptr<StringNode> value = visitString(child.getChildByFieldName("expression"));
+                // values.insert(std::make_pair(key, value));
             }
         } while (cursor.gotoNextSibling());
     }
-    return std::make_unique<ValueMapNode>();
+    return std::make_unique<ValueMapNode>(/*values*/);
 }
 
 std::unique_ptr<Visitor::StringNode>
