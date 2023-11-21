@@ -79,17 +79,20 @@ struct ConstantsNode : public Node {
 };
 
 struct VariablesNode : public Node {
-    VariablesNode();
+    std::unique_ptr<ValueMapNode> valueMap;
+    VariablesNode(std::unique_ptr<ValueMapNode> valueMap);
     void accept(Visitor &visitor) override;
 };
 
 struct PerPlayerNode : public Node {
-    PerPlayerNode();
+    std::unique_ptr<ValueMapNode> valueMap;
+    PerPlayerNode(std::unique_ptr<ValueMapNode> valueMap);
     void accept(Visitor &visitor) override;
 };
 
 struct PerAudienceNode : public Node {
-    PerAudienceNode();
+    std::unique_ptr<ValueMapNode> valueMap;
+    PerAudienceNode(std::unique_ptr<ValueMapNode> valueMap);
     void accept(Visitor &visitor) override;
 };
 
@@ -197,18 +200,28 @@ struct Printer : public Visitor {
     void visit(const VariablesNode &node) override {
         printDepth();
         std::cout << "Variables" << std::endl;
+        depth += 2;
+        node.valueMap->accept(*this);
+        depth -= 2;
     }
     void visit(const PerPlayerNode &node) override {
         printDepth();
         std::cout << "Per-Player" << std::endl;
+        depth += 2;
+        node.valueMap->accept(*this);
+        depth -= 2;
     }
     void visit(const PerAudienceNode &node) override {
         printDepth();
         std::cout << "Per-Audience" << std::endl;
+        depth += 2;
+        node.valueMap->accept(*this);
+        depth -= 2;
     }
     void visit(const RulesNode &node) override {
         printDepth();
         std::cout << "Rules" << std::endl;
+        
     }
     void visit(const SetupRuleNode &node) override {
         printDepth();
@@ -289,25 +302,25 @@ void Visitor::ConstantsNode::accept(Visitor &visitor) {
     visitor.visit(*this);
 }
 
-Visitor::VariablesNode::VariablesNode() {
-
-}
+Visitor::VariablesNode::VariablesNode(
+        std::unique_ptr<ValueMapNode> valueMap) :
+    valueMap{std::move(valueMap)} {}
 
 void Visitor::VariablesNode::accept(Visitor &visitor) {
     visitor.visit(*this);
 }
 
-Visitor::PerPlayerNode::PerPlayerNode() {
-
-}
+Visitor::PerPlayerNode::PerPlayerNode(
+        std::unique_ptr<ValueMapNode> valueMap) :
+    valueMap{std::move(valueMap)} {}
 
 void Visitor::PerPlayerNode::accept(Visitor &visitor) {
     visitor.visit(*this);
 }
 
-Visitor::PerAudienceNode::PerAudienceNode() {
-
-}
+Visitor::PerAudienceNode::PerAudienceNode(
+        std::unique_ptr<ValueMapNode> valueMap) :
+    valueMap{std::move(valueMap)} {}
 
 void Visitor::PerAudienceNode::accept(Visitor &visitor) {
     visitor.visit(*this);
@@ -492,17 +505,23 @@ Visitor::Parser::visitConstants(const ts::Node &node) {
 
 std::unique_ptr<Visitor::VariablesNode>
 Visitor::Parser::visitVariables(const ts::Node &node) {
-    return std::make_unique<VariablesNode>();
+    std::unique_ptr<ValueMapNode> valueMap =
+        visitValueMap(node.getChildByFieldName("map"));
+    return std::make_unique<VariablesNode>(std::move(valueMap));
 }
 
 std::unique_ptr<Visitor::PerPlayerNode>
 Visitor::Parser::visitPerPlayer(const ts::Node &node) {
-    return std::make_unique<PerPlayerNode>();
+    std::unique_ptr<ValueMapNode> valueMap =
+        visitValueMap(node.getChildByFieldName("map"));
+    return std::make_unique<PerPlayerNode>(std::move(valueMap));
 }
 
 std::unique_ptr<Visitor::PerAudienceNode>
 Visitor::Parser::visitPerAudience(const ts::Node &node) {
-    return std::make_unique<PerAudienceNode>();
+    std::unique_ptr<ValueMapNode> valueMap =
+        visitValueMap(node.getChildByFieldName("map"));
+    return std::make_unique<PerAudienceNode>(std::move(valueMap));
 }
 
 std::unique_ptr<Visitor::RulesNode>
