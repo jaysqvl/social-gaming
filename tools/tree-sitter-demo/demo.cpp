@@ -197,6 +197,14 @@ struct Printer : public Visitor {
         std::cout << "Constants" << std::endl;
         depth += 2;
         node.valueMap->accept(*this);
+        
+        // TO-DO:
+        // for (size_t i = 0; i < node.valueMap->values.size(); i++) {
+        //     node.valueMap->values
+            
+        //     ->accept(*this);
+        // }
+
         depth -= 2;
     }
     void visit(const VariablesNode &node) override {
@@ -568,21 +576,26 @@ Visitor::Parser::visitValueMap(const ts::Node &node) {
     if (cursor.gotoFirstChild()) {
         do {
             ts::Node child = cursor.getCurrentNode();
-            //std::cout << child.getType() << child.getSymbol() << std::endl << std::endl;
+            std::cout << child.getType() << child.getSymbol() << std::endl << std::endl;
             if (child.getSymbol() == 127) {
-                // result->setupRules.push_back(visitSetupRule(child));
 
-                //Matt - please look into why this code doesn't work; if this stayys commented it will compile
-                
-                // const ts::Node identifier = child.getChildByFieldName("identifier");
-                // std::unique_ptr<StringNode> key = visitString(child.getChildByFieldName("identifier"));
-                // const ts::Node expression = child.getChildByFieldName("expression");
-                // std::unique_ptr<StringNode> value = visitString(child.getChildByFieldName("expression"));
-                // values.insert(std::make_pair(key, value));
+                const ts::Node key = child.getChildByFieldName("key");
+                std::unique_ptr<StringNode> identifier = visitString(key);
+
+                const ts::Node value = child.getChildByFieldName("value");
+                std::unique_ptr<StringNode> expression = visitString(value);
+
+                values.insert(std::make_pair(std::move(identifier), std::move(expression)));
+
+                for(auto it = values.cbegin(); it != values.cend(); ++it) {
+                    std::cout << it->second->value << "\n";
+                }
             }
         } while (cursor.gotoNextSibling());
+
+       
     }
-    return std::make_unique<ValueMapNode>(/*values*/);
+    return std::make_unique<ValueMapNode>(std::move(values));
 }
 
 std::unique_ptr<Visitor::StringNode>
