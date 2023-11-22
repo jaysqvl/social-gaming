@@ -32,7 +32,9 @@ struct ConstantsNode;
 struct VariablesNode;
 struct PerPlayerNode;
 struct PerAudienceNode;
+
 struct RulesNode;
+struct BodyNode;
 
 struct SetupRuleNode;
 struct ValueMapNode;
@@ -97,7 +99,13 @@ struct PerAudienceNode : public Node {
 };
 
 struct RulesNode : public Node {
+    std::unique_ptr<BodyNode> rulesBody;
     RulesNode();
+    void accept(Visitor &visitor) const override;
+};
+
+struct BodyNode : public Node {
+    BodyNode(void);
     void accept(Visitor &visitor) const override;
 };
 
@@ -154,6 +162,7 @@ struct Visitor {
     virtual void visit(const PerPlayerNode &node) = 0;
     virtual void visit(const PerAudienceNode &node) = 0;
     virtual void visit(const RulesNode &node) = 0;
+    virtual void visit(const BodyNode & node) = 0;
     virtual void visit(const SetupRuleNode &node) = 0;
     virtual void visit(const ValueMapNode &node) = 0;
     virtual void visit(const StringNode &node) = 0;
@@ -218,14 +227,21 @@ struct Printer : public Visitor {
     void visit(const PerPlayerNode &node) override {
         visitNodeWithValueMap("Per-Player", *node.valueMap);
     }
+
     void visit(const PerAudienceNode &node) override {
         visitNodeWithValueMap("Per-Audience", *node.valueMap);
     }
+
     void visit(const RulesNode &node) override {
         printDepth();
         std::cout << "Rules" << std::endl;
-        
     }
+
+    void visit(const BodyNode & node) override {
+        printDepth();
+        std::cout << "RulesBody" << std::endl;
+    }
+
     void visit(const SetupRuleNode &node) override {
         printDepth();
         std::cout << "Setup Rule" << std::endl;
@@ -337,6 +353,14 @@ void Visitor::RulesNode::accept(Visitor &visitor) const {
     visitor.visit(*this);
 }
 
+Visitor::BodyNode::BodyNode() {
+
+}
+
+void Visitor::BodyNode::accept(Visitor &visitor) const {
+    visitor.visit(*this);
+}
+
 Visitor::SetupRuleNode::SetupRuleNode(
         std::unique_ptr<StringNode> kind,
         std::unique_ptr<StringNode> prompt,
@@ -411,6 +435,7 @@ private:
     std::unique_ptr<PerPlayerNode> visitPerPlayer(const ts::Node &);
     std::unique_ptr<PerAudienceNode> visitPerAudience(const ts::Node &);
     std::unique_ptr<RulesNode> visitRules(const ts::Node &);
+    std::unique_ptr<BodyNode> visitRulesBody(const ts::Node &);
     std::unique_ptr<SetupRuleNode> visitSetupRule(const ts::Node &);
     std::unique_ptr<ValueMapNode> visitValueMap(const ts::Node &);
     std::unique_ptr<StringNode> visitString(const ts::Node &);
@@ -533,7 +558,37 @@ Visitor::Parser::visitPerAudience(const ts::Node &node) {
 
 std::unique_ptr<Visitor::RulesNode>
 Visitor::Parser::visitRules(const ts::Node &node) {
+    std::unique_ptr<BodyNode> rulesNode = 
+        visitRulesBody(node.getChildByFieldName("body"));
+    //TODO: have constructor of rules node taking in the node of the body
     return std::make_unique<RulesNode>();
+}
+
+std::unique_ptr<Visitor::BodyNode>
+Visitor::Parser::visitRulesBody(const ts::Node &node) {
+    ts::Cursor cursor = node.getCursor();
+    //std::map<std::unique_ptr<StringNode>, std::unique_ptr<StringNode>> values;
+    if (cursor.gotoFirstChild()) {
+        do {
+            ts::Node child = cursor.getCurrentNode();
+            std::cout << child.getType() << " " << child.getSymbol() << std::endl << std::endl;
+            // if a rule is found, add to the body by getting the child
+            if (child.getSymbol() == 99) {
+                // std::unique_ptr<StringNode> identifier = visitString(key);
+
+                // const ts::Node value = child.getChildByFieldName("value");
+                // std::unique_ptr<StringNode> expression = visitString(value);
+
+                // values.insert(std::make_pair(std::move(identifier), std::move(expression)));
+
+                // // // temp
+                // // for(auto it = values.cbegin(); it != values.cend(); ++it) {
+                // //     std::cout << it->second->value << "\n";
+                // // }
+            }
+        } while (cursor.gotoNextSibling());
+    }
+    return std::make_unique<BodyNode>();
 }
 
 std::unique_ptr<Visitor::SetupRuleNode>
