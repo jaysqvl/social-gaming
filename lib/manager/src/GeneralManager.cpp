@@ -44,6 +44,17 @@ std::string_view FirstLine(const std::string_view &text) {
     return text.substr(0, lineBreak);
 }
 
+// This function parses a Message object to find the original sender. This will be used to properly connect people to GameManagers.
+Connection getSender(const Message& message){
+    return message.connection;
+}
+
+// This function creates a new GameManager and puts it into the vector<GameManager> within the GeneralManager object. It also adds the creator to the game.
+void GeneralManager::createGame(const std::string_view& gameName, Connection& conn){
+    // pass in *this* GeneralManager object to the game
+    gm.push_back(std::make_unique<GameManager>(gameName, conn, this));
+}
+
 // This function parses a command from a string_view and stores its elements in a vector.
 // It splits the input text by spaces and stores the resulting substrings in the 'elems' vector.
 void ParseCommand(std::vector<std::string_view> &elems, const std::string_view &text) {
@@ -76,8 +87,43 @@ void GeneralManager::processMessages(Server &server, std::deque<Packet> &outgoin
     for (const auto& message : incoming) {
         if (message.text[0] == '/') {
             std::vector<std::string_view> elems;
+<<<<<<< HEAD
             ParseCommand(elems, FirstLine(message.text));
             const auto& command = elems[0];
+=======
+            ParseCommand(elems, FirstLine(message.text)); // Extract command and its arguments
+            const auto& command = elems[0]; // The command itself
+
+            // Handle different commands
+            if (command == "quit") {
+                // Disconnect the client
+                server.disconnect(message.connection);
+
+            } else if (command == "shutdown") {
+                // Perform a server shutdown
+                std::cout << "GeneralManager::Shutdown" << std::endl;
+                quit = true;
+
+            } else if (command == "create" && elems.size() >= 2){
+                // Creates a new game, and passes in the user who created it. The game name is chosen by the user.
+                std::cout << "GeneralManager::Create" << std::endl;
+                
+                auto userConnection = getSender(message);
+
+                // elems[1] is the game name that the message sender chose.
+                createGame(elems[1], userConnection);
+
+            } else if (command == "join" && elems.size() >= 2) {
+                // Handle the 'join' command by updating the room
+                std::cout << "GeneralManager::Join " << message.connection.id << " " << elems[1] << std::endl;
+                info[message.connection.id].room = std::string(elems[1]);
+
+            } else if (command == "changename" && elems.size() >= 2) {
+                // Handle the 'changename' command by updating the username
+                std::cout << "GeneralManager::ChangeName " << message.connection.id << " => " << elems[1] << std::endl;
+                info[message.connection.id].username = std::string(elems[1]);
+            }
+>>>>>>> Starting improvements to GameManager, GeneralManager, Game, User in order to get I/O to work
 
             if (commandActions.find(command) != commandActions.end()) {
                 commandActions[command](message);
