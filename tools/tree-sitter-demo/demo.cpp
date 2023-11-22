@@ -24,7 +24,7 @@ namespace Visitor {
 
 struct Visitor;
 struct Node {
-    virtual void accept(Visitor &) = 0;
+    virtual void accept(Visitor &) const = 0;
 };
 
 struct ConfigurationNode;
@@ -56,7 +56,7 @@ struct GameNode : public Node {
         std::unique_ptr<PerPlayerNode> perPlayer,
         std::unique_ptr<PerAudienceNode> perAudience,
         std::unique_ptr<RulesNode> rules);
-    void accept(Visitor &visitor) override;
+    void accept(Visitor &visitor) const override;
 };
 
 struct ConfigurationNode : public Node {
@@ -69,36 +69,36 @@ struct ConfigurationNode : public Node {
         std::unique_ptr<StringNode> name,
         std::unique_ptr<BooleanNode> hasAudience,
         std::unique_ptr<RangeNode> playerRange);
-    void accept(Visitor &visitor) override;
+    void accept(Visitor &visitor) const override;
 };
 
 struct ConstantsNode : public Node {
     std::unique_ptr<ValueMapNode> valueMap;
     ConstantsNode(std::unique_ptr<ValueMapNode> valueMap);
-    void accept(Visitor &visitor) override;
+    void accept(Visitor &visitor) const override;
 };
 
 struct VariablesNode : public Node {
     std::unique_ptr<ValueMapNode> valueMap;
     VariablesNode(std::unique_ptr<ValueMapNode> valueMap);
-    void accept(Visitor &visitor) override;
+    void accept(Visitor &visitor) const override;
 };
 
 struct PerPlayerNode : public Node {
     std::unique_ptr<ValueMapNode> valueMap;
     PerPlayerNode(std::unique_ptr<ValueMapNode> valueMap);
-    void accept(Visitor &visitor) override;
+    void accept(Visitor &visitor) const override;
 };
 
 struct PerAudienceNode : public Node {
     std::unique_ptr<ValueMapNode> valueMap;
     PerAudienceNode(std::unique_ptr<ValueMapNode> valueMap);
-    void accept(Visitor &visitor) override;
+    void accept(Visitor &visitor) const override;
 };
 
 struct RulesNode : public Node {
     RulesNode();
-    void accept(Visitor &visitor) override;
+    void accept(Visitor &visitor) const override;
 };
 
 struct SetupRuleNode : public Node {
@@ -113,14 +113,14 @@ struct SetupRuleNode : public Node {
     std::unique_ptr<RangeNode> range,
     std::unique_ptr<Node> choices,
     std::unique_ptr<Node> defaultValue);
-    void accept(Visitor &visitor) override;
+    void accept(Visitor &visitor) const override;
 };
 
 struct ValueMapNode : public Node {
     std::map<std::unique_ptr<StringNode>, std::unique_ptr<StringNode>> values;
     ValueMapNode(void);
     ValueMapNode(std::map<std::unique_ptr<StringNode>, std::unique_ptr<StringNode>> values);
-    void accept(Visitor &visitor) override;
+    void accept(Visitor &visitor) const override;
 };
 
 
@@ -128,21 +128,21 @@ struct StringNode : public Node {
     std::string value;
 
     StringNode(std::string value);
-    void accept(Visitor &visitor) override;
+    void accept(Visitor &visitor) const override;
 };
 
 struct BooleanNode : public Node {
     bool value;
 
     BooleanNode(bool value);
-    void accept(Visitor &visitor) override;
+    void accept(Visitor &visitor) const override;
 };
 
 struct RangeNode : public Node {
     std::pair<int, int> value;
 
     RangeNode(std::pair<int, int> value);
-    void accept(Visitor &visitor) override;
+    void accept(Visitor &visitor) const override;
 };
 
 struct Visitor {
@@ -192,41 +192,34 @@ struct Printer : public Visitor {
 
         depth -= 2;
     }
-    void visit(const ConstantsNode &node) override {
+    
+    void visitNodeWithValueMap(const std::string& nodeName, const ValueMapNode& valueMapNode) {
         printDepth();
-        std::cout << "Constants" << std::endl;
+        std::cout << nodeName << std::endl;
         depth += 2;
-        node.valueMap->accept(*this);
-        
-        // TO-DO:
-        // for (size_t i = 0; i < node.valueMap->values.size(); i++) {
-        //     node.valueMap->values
-            
-        //     ->accept(*this);
-        // }
+        valueMapNode.accept(*this);
+
+        for (const auto &pair : valueMapNode.values) {
+            pair.first->accept(*this);
+            pair.second->accept(*this);
+        }
 
         depth -= 2;
     }
-    void visit(const VariablesNode &node) override {
-        printDepth();
-        std::cout << "Variables" << std::endl;
-        depth += 2;
-        node.valueMap->accept(*this);
-        depth -= 2;
+
+    void visit(const ConstantsNode &node) override {
+         visitNodeWithValueMap("Constants", *node.valueMap);
     }
+
+    void visit(const VariablesNode &node) override {
+         visitNodeWithValueMap("Variables", *node.valueMap);
+    }
+
     void visit(const PerPlayerNode &node) override {
-        printDepth();
-        std::cout << "Per-Player" << std::endl;
-        depth += 2;
-        node.valueMap->accept(*this);
-        depth -= 2;
+        visitNodeWithValueMap("Per-Player", *node.valueMap);
     }
     void visit(const PerAudienceNode &node) override {
-        printDepth();
-        std::cout << "Per-Audience" << std::endl;
-        depth += 2;
-        node.valueMap->accept(*this);
-        depth -= 2;
+        visitNodeWithValueMap("Per-Audience", *node.valueMap);
     }
     void visit(const RulesNode &node) override {
         printDepth();
@@ -287,7 +280,7 @@ Visitor::GameNode::GameNode(
     perAudience{std::move(perAudience)},
     rules{std::move(rules)} {}
 
-void Visitor::GameNode::accept(Visitor &visitor) {
+void Visitor::GameNode::accept(Visitor &visitor) const {
     visitor.visit(*this);
 }
 
@@ -300,7 +293,7 @@ Visitor::ConfigurationNode::ConfigurationNode(
     playerRange{std::move(playerRange)},
     setupRules{} {}
 
-void Visitor::ConfigurationNode::accept(Visitor &visitor) {
+void Visitor::ConfigurationNode::accept(Visitor &visitor) const {
     visitor.visit(*this);
 }
 
@@ -308,7 +301,7 @@ Visitor::ConstantsNode::ConstantsNode(
         std::unique_ptr<ValueMapNode> valueMap) :
     valueMap{std::move(valueMap)} {}
 
-void Visitor::ConstantsNode::accept(Visitor &visitor) {
+void Visitor::ConstantsNode::accept(Visitor &visitor) const {
     visitor.visit(*this);
 }
 
@@ -316,7 +309,7 @@ Visitor::VariablesNode::VariablesNode(
         std::unique_ptr<ValueMapNode> valueMap) :
     valueMap{std::move(valueMap)} {}
 
-void Visitor::VariablesNode::accept(Visitor &visitor) {
+void Visitor::VariablesNode::accept(Visitor &visitor) const {
     visitor.visit(*this);
 }
 
@@ -324,7 +317,7 @@ Visitor::PerPlayerNode::PerPlayerNode(
         std::unique_ptr<ValueMapNode> valueMap) :
     valueMap{std::move(valueMap)} {}
 
-void Visitor::PerPlayerNode::accept(Visitor &visitor) {
+void Visitor::PerPlayerNode::accept(Visitor &visitor) const {
     visitor.visit(*this);
 }
 
@@ -332,7 +325,7 @@ Visitor::PerAudienceNode::PerAudienceNode(
         std::unique_ptr<ValueMapNode> valueMap) :
     valueMap{std::move(valueMap)} {}
 
-void Visitor::PerAudienceNode::accept(Visitor &visitor) {
+void Visitor::PerAudienceNode::accept(Visitor &visitor) const {
     visitor.visit(*this);
 }
 
@@ -340,7 +333,7 @@ Visitor::RulesNode::RulesNode() {
 
 }
 
-void Visitor::RulesNode::accept(Visitor &visitor) {
+void Visitor::RulesNode::accept(Visitor &visitor) const {
     visitor.visit(*this);
 }
 
@@ -356,7 +349,7 @@ Visitor::SetupRuleNode::SetupRuleNode(
     choices{std::move(choices)},
     defaultValue{std::move(defaultValue)} {}
 
-void Visitor::SetupRuleNode::accept(Visitor &visitor) {
+void Visitor::SetupRuleNode::accept(Visitor &visitor) const {
     visitor.visit(*this);
 }
 
@@ -369,14 +362,14 @@ values(std::move(values)) {
 
 }
 
-void Visitor::ValueMapNode::accept(Visitor &visitor) {
+void Visitor::ValueMapNode::accept(Visitor &visitor) const {
     visitor.visit(*this);
 }
 
 Visitor::StringNode::StringNode(std::string value) :
     value{value} {}
 
-void Visitor::StringNode::accept(Visitor &visitor) {
+void Visitor::StringNode::accept(Visitor &visitor) const {
     visitor.visit(*this);
 }
 
@@ -384,7 +377,7 @@ void Visitor::StringNode::accept(Visitor &visitor) {
 Visitor::BooleanNode::BooleanNode(bool value) :
     value{value} {}
 
-void Visitor::BooleanNode::accept(Visitor &visitor) {
+void Visitor::BooleanNode::accept(Visitor &visitor) const {
     visitor.visit(*this);
 }
 
@@ -392,7 +385,7 @@ void Visitor::BooleanNode::accept(Visitor &visitor) {
 Visitor::RangeNode::RangeNode(std::pair<int, int> value) :
     value{value} {}
 
-void Visitor::RangeNode::accept(Visitor &visitor) {
+void Visitor::RangeNode::accept(Visitor &visitor) const {
     visitor.visit(*this);
 }
 
@@ -509,8 +502,7 @@ Visitor::Parser::visitConfiguration(const ts::Node &node) {
     return result;
 }
 
-//To-Do:
-// 
+
 std::unique_ptr<Visitor::ConstantsNode>
 Visitor::Parser::visitConstants(const ts::Node &node) {
     std::unique_ptr<ValueMapNode> valueMap =
@@ -587,9 +579,10 @@ Visitor::Parser::visitValueMap(const ts::Node &node) {
 
                 values.insert(std::make_pair(std::move(identifier), std::move(expression)));
 
-                for(auto it = values.cbegin(); it != values.cend(); ++it) {
-                    std::cout << it->second->value << "\n";
-                }
+                // // temp
+                // for(auto it = values.cbegin(); it != values.cend(); ++it) {
+                //     std::cout << it->second->value << "\n";
+                // }
             }
         } while (cursor.gotoNextSibling());
 
