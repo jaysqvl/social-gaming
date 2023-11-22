@@ -3,9 +3,13 @@
 #include "Server.h"
 #include "Manager.hpp"
 #include "GameManager.hpp"
+#include "User.hpp"
 
 #include <vector>
 #include <map>
+
+// Resolve circular dependency
+class GameManager;
 
 class GeneralManager : public Manager {
 public:
@@ -14,10 +18,8 @@ public:
         std::string username;
     };
 
-    // TODO - add vector of GameManager
 
     GeneralManager(void);
-
 
     void onConnect(Connection conn) override;
     void onDisconnect(Connection conn) override;
@@ -25,10 +27,13 @@ public:
     void buildOutgoing(std::deque<Message> &outgoing, const Packet &packet) override;
     bool shouldQuit(void) override;
 
+    // creates game, and passes in client of game owner.
+    void createGame(const std::string_view& gameName, Connection& conn);
+
 private:
     std::vector<Connection> clients;
     std::map<uintptr_t, ClientInfo> info;
     bool quit;
 
-    std::vector<GameManager> gm;
+    std::vector<std::unique_ptr<GameManager>> gm;
 };

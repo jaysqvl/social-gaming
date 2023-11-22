@@ -43,6 +43,17 @@ std::string_view FirstLine(const std::string_view &text) {
     return text.substr(0, lineBreak);
 }
 
+// This function parses a Message object to find the original sender. This will be used to properly connect people to GameManagers.
+Connection getSender(const Message& message){
+    return message.connection;
+}
+
+// This function creates a new GameManager and puts it into the vector<GameManager> within the GeneralManager object. It also adds the creator to the game.
+void GeneralManager::createGame(const std::string_view& gameName, Connection& conn){
+    // pass in *this* GeneralManager object to the game
+    gm.push_back(std::make_unique<GameManager>(gameName, conn, this));
+}
+
 // This function parses a command from a string_view and stores its elements in a vector.
 // It splits the input text by spaces and stores the resulting substrings in the 'elems' vector.
 void ParseCommand(std::vector<std::string_view> &elems, const std::string_view &text) {
@@ -83,6 +94,15 @@ void GeneralManager::processMessages(Server &server, std::deque<Packet> &outgoin
                 // Perform a server shutdown
                 std::cout << "GeneralManager::Shutdown" << std::endl;
                 quit = true;
+
+            } else if (command == "create" && elems.size() >= 2){
+                // Creates a new game, and passes in the user who created it. The game name is chosen by the user.
+                std::cout << "GeneralManager::Create" << std::endl;
+                
+                auto userConnection = getSender(message);
+
+                // elems[1] is the game name that the message sender chose.
+                createGame(elems[1], userConnection);
 
             } else if (command == "join" && elems.size() >= 2) {
                 // Handle the 'join' command by updating the room

@@ -21,15 +21,31 @@ void loadFile(std::string &contents, const std::string &filename) {
 }
 
 // Constructor for the GameManager class
-GameManager::GameManager(std::string name, User owner) :
-    owner(owner),
+GameManager::GameManager(std::string_view name, Connection& conn, GeneralManager* generalManager) :
+    generalManager(generalManager),
     gameName(name),
     audience(false),
     playerRange(std::make_pair(2, 8)) { //temp playerRange value
     // Initialize the GameManager with the owner and game name
     // Set the initial conditions
     // Adjust playerRange as needed
+
+    // TODO - create a new user from the connection object
+    // for now, just add in the creating connection to the vector.
+    clients.push_back(conn);
+
 }
+
+// GameManager::GameManager(std::string name, User owner, std::vector<Connection> clients) :
+//     owner(owner),
+//     gameName(name),
+//     audience(false),
+//     clients(clients),
+//     playerRange(std::make_pair(2, 8)) { //temp playerRange value
+//     // Initialize the GameManager with the owner and game name
+//     // Set the initial conditions
+//     // Adjust playerRange as needed
+// }
 
 // Add a player with the given name
 bool GameManager::addPlayer(std::string name) {
