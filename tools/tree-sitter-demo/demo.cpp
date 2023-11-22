@@ -209,8 +209,8 @@ struct Printer : public Visitor {
         valueMapNode.accept(*this);
 
         for (const auto &pair : valueMapNode.values) {
-            pair.first->accept(*this);
-            pair.second->accept(*this);
+            pair.first->accept(*this); // identifier
+            pair.second->accept(*this); // expression
         }
 
         depth -= 2;
@@ -564,6 +564,7 @@ Visitor::Parser::visitRules(const ts::Node &node) {
     return std::make_unique<RulesNode>();
 }
 
+//body is the field of rules; rule is child of body
 std::unique_ptr<Visitor::BodyNode>
 Visitor::Parser::visitRulesBody(const ts::Node &node) {
     ts::Cursor cursor = node.getCursor();
@@ -574,6 +575,8 @@ Visitor::Parser::visitRulesBody(const ts::Node &node) {
             std::cout << child.getType() << " " << child.getSymbol() << std::endl << std::endl;
             // if a rule is found, add to the body by getting the child
             if (child.getSymbol() == 99) {
+                std::cout << child.getChild(0).getType() << " " << child.getChild(0).getSymbol() << std::endl << std::endl;
+                //body->children.push_back(visit(child.getChild(0)));
                 // std::unique_ptr<StringNode> identifier = visitString(key);
 
                 // const ts::Node value = child.getChildByFieldName("value");
