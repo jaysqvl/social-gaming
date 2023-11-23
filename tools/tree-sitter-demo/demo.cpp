@@ -84,17 +84,13 @@ void Visitor::PerAudienceNode::accept(Visitor &visitor) const {
     visitor.visit(*this);
 }
 
-Visitor::RulesNode::RulesNode() {
-
-}
+Visitor::RulesNode::RulesNode() {}
 
 void Visitor::RulesNode::accept(Visitor &visitor) const {
     visitor.visit(*this);
 }
 
-Visitor::BodyNode::BodyNode() {
-
-}
+Visitor::BodyNode::BodyNode() {}
 
 void Visitor::BodyNode::accept(Visitor &visitor) const {
     visitor.visit(*this);
@@ -116,14 +112,10 @@ void Visitor::SetupRuleNode::accept(Visitor &visitor) const {
     visitor.visit(*this);
 }
 
-Visitor::ValueMapNode::ValueMapNode(void) {
-
-}
+Visitor::ValueMapNode::ValueMapNode(void) {}
 
 Visitor::ValueMapNode::ValueMapNode(std::map<std::unique_ptr<StringNode>, std::unique_ptr<StringNode>> values) : 
-values(std::move(values)) {
-
-}
+values(std::move(values)) {}
 
 void Visitor::ValueMapNode::accept(Visitor &visitor) const {
     visitor.visit(*this);
@@ -135,7 +127,6 @@ Visitor::StringNode::StringNode(std::string value) :
 void Visitor::StringNode::accept(Visitor &visitor) const {
     visitor.visit(*this);
 }
-
 
 Visitor::BooleanNode::BooleanNode(bool value) :
     value{value} {}
@@ -228,7 +219,6 @@ Visitor::Parser::visitConfiguration(const ts::Node &node) {
             }
         } while (cursor.gotoNextSibling());
     }
-
     return result;
 }
 
@@ -288,10 +278,10 @@ Visitor::Parser::visitRulesBody(const ts::Node &node) {
 
                 // values.insert(std::make_pair(std::move(identifier), std::move(expression)));
 
-                // // // temp
-                // // for(auto it = values.cbegin(); it != values.cend(); ++it) {
-                // //     std::cout << it->second->value << "\n";
-                // // }
+                // // temp
+                // for(auto it = values.cbegin(); it != values.cend(); ++it) {
+                //     std::cout << it->second->value << "\n";
+                // }
             }
         } while (cursor.gotoNextSibling());
     }
@@ -341,7 +331,7 @@ Visitor::Parser::visitValueMap(const ts::Node &node) {
 
                 values.insert(std::make_pair(std::move(identifier), std::move(expression)));
 
-                // // temp
+                // // temp loop used to print for debugging
                 // for(auto it = values.cbegin(); it != values.cend(); ++it) {
                 //     std::cout << it->second->value << "\n";
                 // }
