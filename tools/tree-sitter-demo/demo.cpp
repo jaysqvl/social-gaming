@@ -1,4 +1,5 @@
 #include <cpp-tree-sitter.h>
+#include "demo.h"
 
 #include <iostream>
 #include <fstream>
@@ -20,218 +21,6 @@ std::string loadFile(const std::string &filename) {
     );
 }
 
-namespace Visitor {
-
-struct Visitor;
-struct Node {
-    virtual void accept(Visitor &) = 0;
-};
-
-struct ConfigurationNode;
-struct ConstantsNode;
-struct VariablesNode;
-struct PerPlayerNode;
-struct PerAudienceNode;
-struct RulesNode;
-
-struct SetupRuleNode;
-
-struct StringNode;
-struct BooleanNode;
-struct RangeNode;
-
-struct GameNode : public Node {
-    std::unique_ptr<ConfigurationNode> configuration;
-    std::unique_ptr<ConstantsNode> constants;
-    std::unique_ptr<VariablesNode> variables;
-    std::unique_ptr<PerPlayerNode> perPlayer;
-    std::unique_ptr<PerAudienceNode> perAudience;
-    std::unique_ptr<RulesNode> rules;
-
-    GameNode(
-        std::unique_ptr<ConfigurationNode> configuration,
-        std::unique_ptr<ConstantsNode> constants,
-        std::unique_ptr<VariablesNode> variables,
-        std::unique_ptr<PerPlayerNode> perPlayer,
-        std::unique_ptr<PerAudienceNode> perAudience,
-        std::unique_ptr<RulesNode> rules);
-    void accept(Visitor &visitor) override;
-};
-
-struct ConfigurationNode : public Node {
-    std::unique_ptr<StringNode> name;
-    std::unique_ptr<BooleanNode> hasAudience;
-    std::unique_ptr<RangeNode> playerRange;
-    std::vector<std::unique_ptr<SetupRuleNode>> setupRules;
-
-    ConfigurationNode(
-        std::unique_ptr<StringNode> name,
-        std::unique_ptr<BooleanNode> hasAudience,
-        std::unique_ptr<RangeNode> playerRange);
-    void accept(Visitor &visitor) override;
-};
-
-struct ConstantsNode : public Node {
-    ConstantsNode();
-    void accept(Visitor &visitor) override;
-};
-
-struct VariablesNode : public Node {
-    VariablesNode();
-    void accept(Visitor &visitor) override;
-};
-
-struct PerPlayerNode : public Node {
-    PerPlayerNode();
-    void accept(Visitor &visitor) override;
-};
-
-struct PerAudienceNode : public Node {
-    PerAudienceNode();
-    void accept(Visitor &visitor) override;
-};
-
-struct RulesNode : public Node {
-    RulesNode();
-    void accept(Visitor &visitor) override;
-};
-
-struct SetupRuleNode : public Node {
-    std::unique_ptr<StringNode> kind;
-    std::unique_ptr<StringNode> prompt;
-    std::unique_ptr<RangeNode> range;
-    std::unique_ptr<Node> choices;
-    std::unique_ptr<Node> defaultValue;
-
-    SetupRuleNode(std::unique_ptr<StringNode> kind,
-    std::unique_ptr<StringNode> prompt,
-    std::unique_ptr<RangeNode> range,
-    std::unique_ptr<Node> choices,
-    std::unique_ptr<Node> defaultValue);
-    void accept(Visitor &visitor) override;
-};
-
-struct StringNode : public Node {
-    std::string value;
-
-    StringNode(std::string value);
-    void accept(Visitor &visitor) override;
-};
-
-struct BooleanNode : public Node {
-    bool value;
-
-    BooleanNode(bool value);
-    void accept(Visitor &visitor) override;
-};
-
-struct RangeNode : public Node {
-    std::pair<int, int> value;
-
-    RangeNode(std::pair<int, int> value);
-    void accept(Visitor &visitor) override;
-};
-
-struct Visitor {
-    virtual void visit(const Node &node) = 0;
-    virtual void visit(const GameNode &node) = 0;
-    virtual void visit(const ConfigurationNode &node) = 0;
-    virtual void visit(const ConstantsNode &node) = 0;
-    virtual void visit(const VariablesNode &node) = 0;
-    virtual void visit(const PerPlayerNode &node) = 0;
-    virtual void visit(const PerAudienceNode &node) = 0;
-    virtual void visit(const RulesNode &node) = 0;
-    virtual void visit(const SetupRuleNode &node) = 0;
-    virtual void visit(const StringNode &node) = 0;
-    virtual void visit(const BooleanNode &node) = 0;
-    virtual void visit(const RangeNode &node) = 0;
-};
-
-struct Printer : public Visitor {
-    void visit(const Node &node) override {
-        printDepth();
-        std::cout << "TODO" << std::endl;
-    }
-    void visit(const GameNode &node) override {
-        printDepth();
-        std::cout << "Game" << std::endl;
-        depth += 2;
-        node.configuration->accept(*this);
-        node.constants->accept(*this);
-        node.variables->accept(*this);
-        node.perPlayer->accept(*this);
-        node.perAudience->accept(*this);
-        node.rules->accept(*this);
-        depth -= 2;
-    }
-    void visit(const ConfigurationNode &node) override {
-        printDepth();
-        std::cout << "Configuration" << std::endl;
-        depth += 2;
-        node.name->accept(*this);
-        node.hasAudience->accept(*this);
-        node.playerRange->accept(*this);
-
-        for (size_t i = 0; i < node.setupRules.size(); i++) {
-            node.setupRules[i]->accept(*this);
-        }
-
-        depth -= 2;
-    }
-    void visit(const ConstantsNode &node) override {
-        printDepth();
-        std::cout << "Constants" << std::endl;
-    }
-    void visit(const VariablesNode &node) override {
-        printDepth();
-        std::cout << "Variables" << std::endl;
-    }
-    void visit(const PerPlayerNode &node) override {
-        printDepth();
-        std::cout << "Per-Player" << std::endl;
-    }
-    void visit(const PerAudienceNode &node) override {
-        printDepth();
-        std::cout << "Per-Audience" << std::endl;
-    }
-    void visit(const RulesNode &node) override {
-        printDepth();
-        std::cout << "Rules" << std::endl;
-    }
-    void visit(const SetupRuleNode &node) override {
-        printDepth();
-        std::cout << "Setup Rule" << std::endl;
-        depth += 2;
-        if (node.kind != nullptr) node.kind->accept(*this);
-        if (node.prompt != nullptr) node.prompt->accept(*this);
-        if (node.range != nullptr) node.range->accept(*this);
-        if (node.choices != nullptr) node.choices->accept(*this);
-        if (node.defaultValue != nullptr) node.defaultValue->accept(*this);
-        depth -= 2;
-    }
-    void visit(const StringNode &node) override {
-        printDepth();
-        std::cout << "String " << node.value << std::endl;
-    }
-    void visit(const BooleanNode &node) override {
-        printDepth();
-        std::cout << "Boolean " << (node.value ? "true" : "false") << std::endl;
-    }
-    void visit(const RangeNode &node) override {
-        printDepth();
-        std::cout << "Range (" << node.value.first << ", " << node.value.second << ")" << std::endl;
-    }
-
-    size_t depth = 0;
-    void printDepth(void) {
-        for (size_t i = 0; i < depth; i++) {
-            std::cout << " ";
-        }
-    }
-};
-
-};
-
 Visitor::GameNode::GameNode(
         std::unique_ptr<ConfigurationNode> configuration,
         std::unique_ptr<ConstantsNode> constants,
@@ -246,7 +35,7 @@ Visitor::GameNode::GameNode(
     perAudience{std::move(perAudience)},
     rules{std::move(rules)} {}
 
-void Visitor::GameNode::accept(Visitor &visitor) {
+void Visitor::GameNode::accept(Visitor &visitor) const {
     visitor.visit(*this);
 }
 
@@ -259,47 +48,51 @@ Visitor::ConfigurationNode::ConfigurationNode(
     playerRange{std::move(playerRange)},
     setupRules{} {}
 
-void Visitor::ConfigurationNode::accept(Visitor &visitor) {
+void Visitor::ConfigurationNode::accept(Visitor &visitor) const {
     visitor.visit(*this);
 }
 
-Visitor::ConstantsNode::ConstantsNode() {
+Visitor::ConstantsNode::ConstantsNode(
+        std::unique_ptr<ValueMapNode> valueMap) :
+    valueMap{std::move(valueMap)} {}
 
-}
-
-void Visitor::ConstantsNode::accept(Visitor &visitor) {
+void Visitor::ConstantsNode::accept(Visitor &visitor) const {
     visitor.visit(*this);
 }
 
-Visitor::VariablesNode::VariablesNode() {
+Visitor::VariablesNode::VariablesNode(
+        std::unique_ptr<ValueMapNode> valueMap) :
+    valueMap{std::move(valueMap)} {}
 
-}
-
-void Visitor::VariablesNode::accept(Visitor &visitor) {
+void Visitor::VariablesNode::accept(Visitor &visitor) const {
     visitor.visit(*this);
 }
 
-Visitor::PerPlayerNode::PerPlayerNode() {
+Visitor::PerPlayerNode::PerPlayerNode(
+        std::unique_ptr<ValueMapNode> valueMap) :
+    valueMap{std::move(valueMap)} {}
 
-}
-
-void Visitor::PerPlayerNode::accept(Visitor &visitor) {
+void Visitor::PerPlayerNode::accept(Visitor &visitor) const {
     visitor.visit(*this);
 }
 
-Visitor::PerAudienceNode::PerAudienceNode() {
+Visitor::PerAudienceNode::PerAudienceNode(
+        std::unique_ptr<ValueMapNode> valueMap) :
+    valueMap{std::move(valueMap)} {}
 
-}
-
-void Visitor::PerAudienceNode::accept(Visitor &visitor) {
+void Visitor::PerAudienceNode::accept(Visitor &visitor) const {
     visitor.visit(*this);
 }
 
-Visitor::RulesNode::RulesNode() {
+Visitor::RulesNode::RulesNode() {}
 
+void Visitor::RulesNode::accept(Visitor &visitor) const {
+    visitor.visit(*this);
 }
 
-void Visitor::RulesNode::accept(Visitor &visitor) {
+Visitor::BodyNode::BodyNode() {}
+
+void Visitor::BodyNode::accept(Visitor &visitor) const {
     visitor.visit(*this);
 }
 
@@ -315,22 +108,30 @@ Visitor::SetupRuleNode::SetupRuleNode(
     choices{std::move(choices)},
     defaultValue{std::move(defaultValue)} {}
 
-void Visitor::SetupRuleNode::accept(Visitor &visitor) {
+void Visitor::SetupRuleNode::accept(Visitor &visitor) const {
+    visitor.visit(*this);
+}
+
+Visitor::ValueMapNode::ValueMapNode(void) {}
+
+Visitor::ValueMapNode::ValueMapNode(std::map<std::unique_ptr<StringNode>, std::unique_ptr<StringNode>> values) : 
+values(std::move(values)) {}
+
+void Visitor::ValueMapNode::accept(Visitor &visitor) const {
     visitor.visit(*this);
 }
 
 Visitor::StringNode::StringNode(std::string value) :
     value{value} {}
 
-void Visitor::StringNode::accept(Visitor &visitor) {
+void Visitor::StringNode::accept(Visitor &visitor) const {
     visitor.visit(*this);
 }
-
 
 Visitor::BooleanNode::BooleanNode(bool value) :
     value{value} {}
 
-void Visitor::BooleanNode::accept(Visitor &visitor) {
+void Visitor::BooleanNode::accept(Visitor &visitor) const {
     visitor.visit(*this);
 }
 
@@ -338,39 +139,9 @@ void Visitor::BooleanNode::accept(Visitor &visitor) {
 Visitor::RangeNode::RangeNode(std::pair<int, int> value) :
     value{value} {}
 
-void Visitor::RangeNode::accept(Visitor &visitor) {
+void Visitor::RangeNode::accept(Visitor &visitor) const {
     visitor.visit(*this);
 }
-
-namespace Visitor {
-
-class Parser {
-public:
-    using Command = std::unique_ptr<Node> (Parser::*)(const ts::Node &);
-public:
-    Parser(const ts::Language &language, const std::string &source);
-    std::unique_ptr<Node> visit(const ts::Node &node);
-private:
-    const ts::Language &language;
-    const std::string &source;
-    std::map<ts::Symbol, Command> visitMap;
-private:
-    std::unique_ptr<Node> visitChildren(const ts::Node &);
-
-    std::unique_ptr<GameNode> visitGame(const ts::Node &);
-    std::unique_ptr<ConfigurationNode> visitConfiguration(const ts::Node &);
-    std::unique_ptr<ConstantsNode> visitConstants(const ts::Node &);
-    std::unique_ptr<VariablesNode> visitVariables(const ts::Node &);
-    std::unique_ptr<PerPlayerNode> visitPerPlayer(const ts::Node &);
-    std::unique_ptr<PerAudienceNode> visitPerAudience(const ts::Node &);
-    std::unique_ptr<RulesNode> visitRules(const ts::Node &);
-    std::unique_ptr<SetupRuleNode> visitSetupRule(const ts::Node &);
-    std::unique_ptr<StringNode> visitString(const ts::Node &);
-    std::unique_ptr<BooleanNode> visitBoolean(const ts::Node &);
-    std::unique_ptr<RangeNode> visitRange(const ts::Node &);
-};
-
-};
 
 Visitor::Parser::Parser(const ts::Language &language, const std::string &source) :
     language{language}, source{source}, visitMap{
@@ -400,7 +171,6 @@ Visitor::Parser::visitChildren(const ts::Node &node) {
     return nullptr;
 }
 
-
 std::unique_ptr<Visitor::GameNode>
 Visitor::Parser::visitGame(const ts::Node &node) {
     std::unique_ptr<ConfigurationNode> configuration =
@@ -425,7 +195,6 @@ Visitor::Parser::visitGame(const ts::Node &node) {
             std::move(rules));
 }
 
-
 std::unique_ptr<Visitor::ConfigurationNode>
 Visitor::Parser::visitConfiguration(const ts::Node &node) {
     std::unique_ptr<StringNode> name =
@@ -440,7 +209,7 @@ Visitor::Parser::visitConfiguration(const ts::Node &node) {
             std::move(name),
             std::move(hasAudience),
             std::move(playerRange));
-
+// how to: handle unnamed children
     ts::Cursor cursor = node.getCursor();
     if (cursor.gotoFirstChild()) {
         do {
@@ -450,43 +219,84 @@ Visitor::Parser::visitConfiguration(const ts::Node &node) {
             }
         } while (cursor.gotoNextSibling());
     }
-
     return result;
 }
 
-
 std::unique_ptr<Visitor::ConstantsNode>
 Visitor::Parser::visitConstants(const ts::Node &node) {
-    return std::make_unique<ConstantsNode>();
+    std::unique_ptr<ValueMapNode> valueMap =
+        visitValueMap(node.getChildByFieldName("map"));
+    return std::make_unique<ConstantsNode>(std::move(valueMap));
 }
 
 std::unique_ptr<Visitor::VariablesNode>
 Visitor::Parser::visitVariables(const ts::Node &node) {
-    return std::make_unique<VariablesNode>();
+    std::unique_ptr<ValueMapNode> valueMap =
+        visitValueMap(node.getChildByFieldName("map"));
+    return std::make_unique<VariablesNode>(std::move(valueMap));
 }
 
 std::unique_ptr<Visitor::PerPlayerNode>
 Visitor::Parser::visitPerPlayer(const ts::Node &node) {
-    return std::make_unique<PerPlayerNode>();
+    std::unique_ptr<ValueMapNode> valueMap =
+        visitValueMap(node.getChildByFieldName("map"));
+    return std::make_unique<PerPlayerNode>(std::move(valueMap));
 }
 
 std::unique_ptr<Visitor::PerAudienceNode>
 Visitor::Parser::visitPerAudience(const ts::Node &node) {
-    return std::make_unique<PerAudienceNode>();
+    std::unique_ptr<ValueMapNode> valueMap =
+        visitValueMap(node.getChildByFieldName("map"));
+    return std::make_unique<PerAudienceNode>(std::move(valueMap));
 }
 
 std::unique_ptr<Visitor::RulesNode>
 Visitor::Parser::visitRules(const ts::Node &node) {
+    std::unique_ptr<BodyNode> rulesNode = 
+        visitRulesBody(node.getChildByFieldName("body"));
+    //TODO: have constructor of rules node taking in the node of the body
     return std::make_unique<RulesNode>();
+}
+
+//body is the field of rules; rule is child of body
+std::unique_ptr<Visitor::BodyNode>
+Visitor::Parser::visitRulesBody(const ts::Node &node) {
+    ts::Cursor cursor = node.getCursor();
+    //std::map<std::unique_ptr<StringNode>, std::unique_ptr<StringNode>> values;
+    if (cursor.gotoFirstChild()) {
+        do {
+            ts::Node child = cursor.getCurrentNode();
+            std::cout << child.getType() << " " << child.getSymbol() << std::endl << std::endl;
+            // if a rule is found, add to the body by getting the child
+            if (child.getSymbol() == 99) {
+                std::cout << child.getChild(0).getType() << " " << child.getChild(0).getSymbol() << std::endl << std::endl;
+                //body->children.push_back(visit(child.getChild(0)));
+                // std::unique_ptr<StringNode> identifier = visitString(key);
+
+                // const ts::Node value = child.getChildByFieldName("value");
+                // std::unique_ptr<StringNode> expression = visitString(value);
+
+                // values.insert(std::make_pair(std::move(identifier), std::move(expression)));
+
+                // // temp
+                // for(auto it = values.cbegin(); it != values.cend(); ++it) {
+                //     std::cout << it->second->value << "\n";
+                // }
+            }
+        } while (cursor.gotoNextSibling());
+    }
+    return std::make_unique<BodyNode>();
 }
 
 std::unique_ptr<Visitor::SetupRuleNode>
 Visitor::Parser::visitSetupRule(const ts::Node &node) {
+    // How to: handle field
     std::unique_ptr<StringNode> kind =
         visitString(node.getChildByFieldName("kind"));
     std::unique_ptr<StringNode> prompt =
         visitString(node.getChildByFieldName("prompt"));
 
+// How-To: handle optional types
     auto rangeChild = node.getChildByFieldName("range");
     auto choicesChild = node.getChildByFieldName("choices");
     auto defaultChild = node.getChildByFieldName("default");
@@ -501,6 +311,36 @@ Visitor::Parser::visitSetupRule(const ts::Node &node) {
             std::move(range),
             std::move(choices),
             std::move(defaultValue));
+}
+
+std::unique_ptr<Visitor::ValueMapNode>
+Visitor::Parser::visitValueMap(const ts::Node &node) {
+    ts::Cursor cursor = node.getCursor();
+    std::map<std::unique_ptr<StringNode>, std::unique_ptr<StringNode>> values;
+    if (cursor.gotoFirstChild()) {
+        do {
+            ts::Node child = cursor.getCurrentNode();
+            std::cout << child.getType() << child.getSymbol() << std::endl << std::endl;
+            if (child.getSymbol() == 127) {
+
+                const ts::Node key = child.getChildByFieldName("key");
+                std::unique_ptr<StringNode> identifier = visitString(key);
+
+                const ts::Node value = child.getChildByFieldName("value");
+                std::unique_ptr<StringNode> expression = visitString(value);
+
+                values.insert(std::make_pair(std::move(identifier), std::move(expression)));
+
+                // // temp loop used to print for debugging
+                // for(auto it = values.cbegin(); it != values.cend(); ++it) {
+                //     std::cout << it->second->value << "\n";
+                // }
+            }
+        } while (cursor.gotoNextSibling());
+
+       
+    }
+    return std::make_unique<ValueMapNode>(std::move(values));
 }
 
 std::unique_ptr<Visitor::StringNode>
