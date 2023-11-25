@@ -27,8 +27,9 @@ struct VariablesNode;
 struct PerPlayerNode;
 struct PerAudienceNode;
 
-struct RulesNode;
+struct RulesSetNode;
 struct BodyNode;
+struct GameRuleNode;
 
 struct SetupRuleNode;
 struct ValueMapNode;
@@ -43,7 +44,7 @@ struct GameNode : public Node {
     std::unique_ptr<VariablesNode> variables;
     std::unique_ptr<PerPlayerNode> perPlayer;
     std::unique_ptr<PerAudienceNode> perAudience;
-    std::unique_ptr<RulesNode> rules;
+    std::unique_ptr<RulesSetNode> rules;
 
     GameNode(
         std::unique_ptr<ConfigurationNode> configuration,
@@ -51,7 +52,7 @@ struct GameNode : public Node {
         std::unique_ptr<VariablesNode> variables,
         std::unique_ptr<PerPlayerNode> perPlayer,
         std::unique_ptr<PerAudienceNode> perAudience,
-        std::unique_ptr<RulesNode> rules);
+        std::unique_ptr<RulesSetNode> rules);
     void accept(Visitor &visitor) const override;
 };
 
@@ -92,15 +93,35 @@ struct PerAudienceNode : public Node {
     void accept(Visitor &visitor) const override;
 };
 
-struct RulesNode : public Node {
-    std::unique_ptr<BodyNode> rulesBody;
-    RulesNode();
+struct RuleNode : public Node {
+    std::string ruleType;
+    size_t ruleSymbol;
+    RuleNode();
+    RuleNode(std::string type, size_t symbol);
+};
+
+//overarching rules set (ex. in the rpsText.txt file, starts on line 44.)
+struct RulesSetNode : public Node {
+    std::unique_ptr<BodyNode> body;
+    RulesSetNode();
     void accept(Visitor &visitor) const override;
 };
 
 struct BodyNode : public Node {
+    std::vector<std::unique_ptr<GameRuleNode>> gameRules;
     BodyNode(void);
     void accept(Visitor &visitor) const override;
+    void addRuleToGameRules(std::unique_ptr<GameRuleNode> newRule);
+
+    //function used for debug purposes
+    std::vector<std::unique_ptr<GameRuleNode>> getGameRules();
+};
+
+struct GameRuleNode : public Node {
+    std::string ruleType;
+    size_t ruleSymbol;
+    GameRuleNode();
+    GameRuleNode(std::string type, size_t symbol);
 };
 
 struct SetupRuleNode : public Node {
@@ -155,8 +176,9 @@ struct Visitor {
     virtual void visit(const VariablesNode &node) = 0;
     virtual void visit(const PerPlayerNode &node) = 0;
     virtual void visit(const PerAudienceNode &node) = 0;
-    virtual void visit(const RulesNode &node) = 0;
-    virtual void visit(const BodyNode & node) = 0;
+    virtual void visit(const RulesSetNode &node) = 0;
+    virtual void visit(const BodyNode &node) = 0;
+    virtual void visit(const GameRuleNode &node) = 0;
     virtual void visit(const SetupRuleNode &node) = 0;
     virtual void visit(const ValueMapNode &node) = 0;
     virtual void visit(const StringNode &node) = 0;
@@ -226,14 +248,20 @@ struct Printer : public Visitor {
         visitNodeWithValueMap("Per-Audience", *node.valueMap);
     }
 
-    void visit(const RulesNode &node) override {
+    void visit(const RulesSetNode &node) override {
         printDepth();
-        std::cout << "Rules" << std::endl;
+        //TODO: implement the visitation of rules
+        std::cout << "Start Rule Set" << std::endl;
     }
 
     void visit(const BodyNode & node) override {
         printDepth();
         std::cout << "RulesBody" << std::endl;
+    }
+
+    virtual void visit(const GameRuleNode &node) override {
+        printDepth();
+        std::cout << "Rule" << std::endl;
     }
 
     void visit(const SetupRuleNode &node) override {
@@ -293,7 +321,7 @@ private:
     std::unique_ptr<VariablesNode> visitVariables(const ts::Node &);
     std::unique_ptr<PerPlayerNode> visitPerPlayer(const ts::Node &);
     std::unique_ptr<PerAudienceNode> visitPerAudience(const ts::Node &);
-    std::unique_ptr<RulesNode> visitRules(const ts::Node &);
+    std::unique_ptr<RulesSetNode> visitRules(const ts::Node &);
     std::unique_ptr<BodyNode> visitRulesBody(const ts::Node &);
     std::unique_ptr<SetupRuleNode> visitSetupRule(const ts::Node &);
     std::unique_ptr<ValueMapNode> visitValueMap(const ts::Node &);
