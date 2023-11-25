@@ -266,11 +266,21 @@ Visitor::Parser::visitRulesBody(const ts::Node &node) {
     if (cursor.gotoFirstChild()) {
         do {
             ts::Node child = cursor.getCurrentNode();
-            std::cout << child.getType() << " " << child.getSymbol() << std::endl << std::endl;
+            std::cout << child.getType() << " " << child.getSymbol() << std::endl;
             // if a rule is found, add to the body by getting the child
+            if (child.getSymbol() == 85) { // identifier
+                
+            }
+
+            if (child.getSymbol() == 120) { //expression
+
+            }
+            
+            //TODO: abstract the code in here so we can handle nested for loops
+            //initial rule node handling (NEEDS TO BE ABSTRACTED)
             if (child.getSymbol() == 99) {
                 std::cout << "rule found" << std::endl;
-                std::cout << child.getChild(0).getType() << " " << child.getChild(0).getSymbol() << std::endl << std::endl;
+                std::cout << child.getChild(0).getType() << " " << child.getChild(0).getSymbol() << std::endl;
                 ts::Node ruleTypeNode = child.getChild(0);
                 if (ruleTypeNode.getSymbol() == 100) {
                     std::cout << "for loop found" << std::endl;
@@ -291,7 +301,7 @@ Visitor::Parser::visitRulesBody(const ts::Node &node) {
                                             std::cout << "  " << rulesKid.getChild(0).getType() << " " << rulesKid.getChild(0).getSymbol() << std::endl << std::endl;
                                         }
                                     } while (rulesCursor.gotoNextSibling());
-                                    std::cout << "end for loop body" << std::endl;
+                                    std::cout << "end for loop body" << std::endl << std::endl;
                                 }
                             }
                         } while (forLoopCursor.gotoNextSibling());
