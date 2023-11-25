@@ -97,14 +97,23 @@ void Visitor::BodyNode::accept(Visitor &visitor) const {
 }
 
 void Visitor::BodyNode::addRuleToGameRules(std::unique_ptr<GameRuleNode> newRule) {
-    gameRules.emplace_back(newRule);
+    gameRules.emplace_back(std::move(newRule));
 }
 
-std::vector<std::unique_ptr<Visitor::GameRuleNode>> Visitor::BodyNode::getGameRules() {
-    return gameRules;
+// std::vector<std::unique_ptr<Visitor::GameRuleNode>> Visitor::BodyNode::getGameRules() {
+//     return gameRules;
+// }
+
+//TODO: implement game rule constructors and accept functions!
+Visitor::GameRuleNode::GameRuleNode() {}
+
+Visitor::GameRuleNode::GameRuleNode(std::string type, size_t symbol) 
+    : ruleType(type), ruleSymbol(symbol) {}
+
+void Visitor::GameRuleNode::accept(Visitor &visitor) const {
+    visitor.visit(*this);
 }
 
-//TODO: implement game rule
 Visitor::SetupRuleNode::SetupRuleNode(
         std::unique_ptr<StringNode> kind,
         std::unique_ptr<StringNode> prompt,
