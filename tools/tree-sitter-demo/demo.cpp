@@ -27,7 +27,7 @@ Visitor::GameNode::GameNode(
         std::unique_ptr<VariablesNode> variables,
         std::unique_ptr<PerPlayerNode> perPlayer,
         std::unique_ptr<PerAudienceNode> perAudience,
-        std::unique_ptr<RulesNode> rules) :
+        std::unique_ptr<RulesSetNode> rules) :
     configuration{std::move(configuration)},
     constants{std::move(constants)},
     variables{std::move(variables)},
@@ -84,18 +84,27 @@ void Visitor::PerAudienceNode::accept(Visitor &visitor) const {
     visitor.visit(*this);
 }
 
-Visitor::RulesNode::RulesNode() {}
+Visitor::RulesSetNode::RulesSetNode() {}
 
-void Visitor::RulesNode::accept(Visitor &visitor) const {
+void Visitor::RulesSetNode::accept(Visitor &visitor) const {
     visitor.visit(*this);
 }
 
-Visitor::BodyNode::BodyNode() {}
+Visitor::BodyNode::BodyNode(void) {}
 
 void Visitor::BodyNode::accept(Visitor &visitor) const {
     visitor.visit(*this);
 }
 
+void Visitor::BodyNode::addRuleToGameRules(std::unique_ptr<GameRuleNode> newRule) {
+    gameRules.emplace_back(newRule);
+}
+
+std::vector<std::unique_ptr<Visitor::GameRuleNode>> Visitor::BodyNode::getGameRules() {
+    return gameRules;
+}
+
+//TODO: implement game rule
 Visitor::SetupRuleNode::SetupRuleNode(
         std::unique_ptr<StringNode> kind,
         std::unique_ptr<StringNode> prompt,
@@ -183,7 +192,7 @@ Visitor::Parser::visitGame(const ts::Node &node) {
         visitPerPlayer(node.getChildByFieldName("per_player"));
     std::unique_ptr<PerAudienceNode> perAudience =
         visitPerAudience(node.getChildByFieldName("per_audience"));
-    std::unique_ptr<RulesNode> rules =
+    std::unique_ptr<RulesSetNode> rules =
         visitRules(node.getChildByFieldName("rules"));
 
     return std::make_unique<GameNode>(
@@ -250,12 +259,12 @@ Visitor::Parser::visitPerAudience(const ts::Node &node) {
     return std::make_unique<PerAudienceNode>(std::move(valueMap));
 }
 
-std::unique_ptr<Visitor::RulesNode>
+std::unique_ptr<Visitor::RulesSetNode>
 Visitor::Parser::visitRules(const ts::Node &node) {
     std::unique_ptr<BodyNode> rulesNode = 
         visitRulesBody(node.getChildByFieldName("body"));
     //TODO: have constructor of rules node taking in the node of the body
-    return std::make_unique<RulesNode>();
+    return std::make_unique<RulesSetNode>();
 }
 
 //body is the field of rules; rule is child of body
@@ -275,7 +284,7 @@ Visitor::Parser::visitRulesBody(const ts::Node &node) {
             if (child.getSymbol() == 120) { //expression
 
             }
-            
+
             //TODO: abstract the code in here so we can handle nested for loops
             //initial rule node handling (NEEDS TO BE ABSTRACTED)
             if (child.getSymbol() == 99) {
