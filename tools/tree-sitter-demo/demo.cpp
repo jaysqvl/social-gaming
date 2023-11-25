@@ -303,13 +303,15 @@ Visitor::Parser::visitRulesBody(const ts::Node &node) {
                 if (ruleTypeNode.getSymbol() == 100) {
                     std::cout << "for loop found" << std::endl;
                     ts::Cursor forLoopCursor = ruleTypeNode.getCursor();
-                    if (forLoopCursor.gotoFirstChild()) {
+
+                    if (forLoopCursor.gotoFirstChild()) { //Handles keyword, ident., in, expression, and body
                         do {
                             ts::Node forLoopKid = forLoopCursor.getCurrentNode();
                             std::cout << forLoopKid.getType() << " " << forLoopKid.getSymbol() << std::endl << std::endl;
-                            //TODO: implement what to do with the rules body
+
+                            //TODO: implement what to do with the rules body - discard, messages, and parallel for probably need to look like this
                             if (forLoopKid.getSymbol() == 131) {
-                                std::cout << "for loop body" << std::endl;
+                                std::cout << "for loop rules body" << std::endl;
                                 ts::Cursor rulesCursor = forLoopKid.getCursor();
                                 if (rulesCursor.gotoFirstChild()) {
                                     do {
@@ -317,11 +319,51 @@ Visitor::Parser::visitRulesBody(const ts::Node &node) {
                                         std::cout << rulesKid.getType() << " " << rulesKid.getSymbol() << std::endl << std::endl;
                                         if (rulesKid.getSymbol() == 99) {
                                             std::cout << "  " << rulesKid.getChild(0).getType() << " " << rulesKid.getChild(0).getSymbol() << std::endl << std::endl;
+
+                                            ts::Node rulesType = rulesKid.getChild(0);
+
+                                            // Discard
+                                            if (rulesType.getSymbol() == 111) {
+                                                ts::Cursor discardCursor = rulesType.getCursor();
+                                                do {
+                                                     ts::Node discardKid = discardCursor.getCurrentNode();
+                                                    std::cout << "  " << discardKid.getChild(0).getType() << " " << discardKid.getChild(0).getSymbol() << std::endl << std::endl;
+                                                    std::cout << "  " << discardKid.getChild(1).getType() << " " << discardKid.getChild(1).getSymbol() << std::endl << std::endl;
+                                                } while (discardCursor.gotoNextSibling());
+                                            }
+
+                                            // Message
+                                            else if (rulesType.getSymbol() == 118) {
+                                                ts::Cursor messageCursor = rulesType.getCursor();
+                                                do {
+                                                     ts::Node messageKid = messageCursor.getCurrentNode();
+                                                     std::cout << "  " << messageKid.getChild(0).getType() << " " << messageKid.getChild(0).getSymbol() << std::endl << std::endl;
+                                                     std::cout << "  " << messageKid.getChild(1).getType() << " " << messageKid.getChild(1).getSymbol() << std::endl << std::endl;
+                                                } while (messageCursor.gotoNextSibling());
+
+                                            }
+
+                                            // Parallel For
+                                            else if (rulesType.getSymbol() == 102) {
+                                                ts::Cursor parallelCursor = rulesType.getCursor();
+                                                do {
+                                                     ts::Node parallelKid = parallelCursor.getCurrentNode();
+                                                     std::cout << "  " << parallelKid.getChild(0).getType() << " " << parallelKid.getChild(0).getSymbol() << std::endl << std::endl;
+                                                     std::cout << "  " << parallelKid.getChild(1).getType() << " " << parallelKid.getChild(1).getSymbol() << std::endl << std::endl;
+                                                     std::cout << "  " << parallelKid.getChild(2).getType() << " " << parallelKid.getChild(2).getSymbol() << std::endl << std::endl;
+                                                     std::cout << "  " << parallelKid.getChild(3).getType() << " " << parallelKid.getChild(3).getSymbol() << std::endl << std::endl;
+                                                     std::cout << "  " << parallelKid.getChild(4).getType() << " " << parallelKid.getChild(4).getSymbol() << std::endl << std::endl;
+                                                } while (parallelCursor.gotoNextSibling());
+
+                                            }
                                         }
                                     } while (rulesCursor.gotoNextSibling());
                                     std::cout << "end for loop body" << std::endl << std::endl;
                                 }
                             }
+
+
+
                         } while (forLoopCursor.gotoNextSibling());
                     }
                 }
