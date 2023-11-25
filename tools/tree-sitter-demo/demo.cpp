@@ -269,19 +269,34 @@ Visitor::Parser::visitRulesBody(const ts::Node &node) {
             std::cout << child.getType() << " " << child.getSymbol() << std::endl << std::endl;
             // if a rule is found, add to the body by getting the child
             if (child.getSymbol() == 99) {
+                std::cout << "rule found" << std::endl;
                 std::cout << child.getChild(0).getType() << " " << child.getChild(0).getSymbol() << std::endl << std::endl;
-                //body->children.push_back(visit(child.getChild(0)));
-                // std::unique_ptr<StringNode> identifier = visitString(key);
-
-                // const ts::Node value = child.getChildByFieldName("value");
-                // std::unique_ptr<StringNode> expression = visitString(value);
-
-                // values.insert(std::make_pair(std::move(identifier), std::move(expression)));
-
-                // // temp
-                // for(auto it = values.cbegin(); it != values.cend(); ++it) {
-                //     std::cout << it->second->value << "\n";
-                // }
+                ts::Node ruleTypeNode = child.getChild(0);
+                if (ruleTypeNode.getSymbol() == 100) {
+                    std::cout << "for loop found" << std::endl;
+                    ts::Cursor forLoopCursor = ruleTypeNode.getCursor();
+                    if (forLoopCursor.gotoFirstChild()) {
+                        do {
+                            ts::Node forLoopKid = forLoopCursor.getCurrentNode();
+                            std::cout << forLoopKid.getType() << " " << forLoopKid.getSymbol() << std::endl << std::endl;
+                            //TODO: implement what to do with the rules body
+                            if (forLoopKid.getSymbol() == 131) {
+                                std::cout << "for loop body" << std::endl;
+                                ts::Cursor rulesCursor = forLoopKid.getCursor();
+                                if (rulesCursor.gotoFirstChild()) {
+                                    do {
+                                        ts::Node rulesKid = rulesCursor.getCurrentNode();
+                                        std::cout << rulesKid.getType() << " " << rulesKid.getSymbol() << std::endl << std::endl;
+                                        if (rulesKid.getSymbol() == 99) {
+                                            std::cout << "  " << rulesKid.getChild(0).getType() << " " << rulesKid.getChild(0).getSymbol() << std::endl << std::endl;
+                                        }
+                                    } while (rulesCursor.gotoNextSibling());
+                                    std::cout << "end for loop body" << std::endl;
+                                }
+                            }
+                        } while (forLoopCursor.gotoNextSibling());
+                    }
+                }
             }
         } while (cursor.gotoNextSibling());
     }
