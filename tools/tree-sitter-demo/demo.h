@@ -114,7 +114,7 @@ struct BodyNode : public Node {
     void addRuleToGameRules(std::unique_ptr<GameRuleNode> newRule);
 
     //function used for debug purposes
-    std::vector<std::unique_ptr<GameRuleNode>> getGameRules();
+    //std::vector<std::unique_ptr<GameRuleNode>> getGameRules();
 };
 
 struct GameRuleNode : public Node {
@@ -122,6 +122,7 @@ struct GameRuleNode : public Node {
     size_t ruleSymbol;
     GameRuleNode();
     GameRuleNode(std::string type, size_t symbol);
+    void accept(Visitor &visitor) const override;
 };
 
 struct SetupRuleNode : public Node {
