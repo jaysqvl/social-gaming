@@ -27,7 +27,7 @@ public:
     // void buildOutgoing(std::deque<Message> &outgoing, const Packet &packet) override;
 
     // TODO - this might need to be override
-    void GeneralManager::buildOutgoing(std::deque<Message> &outgoing, const Packet &packet, std::vector<Connection> conns);
+    void GeneralManager::buildOutgoing(std::deque<Packet> &outgoing, const Packet &packet, std::vector<Connection> conns);
 
     bool shouldQuit(void) override;
 
