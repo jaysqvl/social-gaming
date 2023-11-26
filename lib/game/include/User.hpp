@@ -18,7 +18,7 @@ enum class UserRole {
 class User {
 private:
     std::string name;
-    uint32_t id;
+    // uint32_t id;
 
     //TODO: maybe look into element and see if there is circular dependency
     // std::map<std::string, ElementPtr> userMap;
@@ -26,9 +26,11 @@ private:
     UserRole role = UserRole::Audience; // Default: Audience
 
 public:
-    User(std::string name, uint32_t id);
+    User(std::string name);
+    // User(std::string name, uint32_t id);
     std::string getName() const;
-    uint32_t getId() const;
+    // bool changeName();
+    // uint32_t getId() const;
     // std::map<std::string, ElementPtr> getMap() const;
     void setRole(UserRole newRole);
     UserRole getRole() const;
