@@ -30,72 +30,95 @@ GameManager::GameManager(std::string_view name, Connection& conn, GeneralManager
     // Set the initial conditions
     // Adjust playerRange as needed
 
-    // TODO - create a new user from the connection object
-    // for now, just add in the creating connection to the vector.
-    clients.push_back(conn);
-
+    // the player's default username is "User <connectionID>"
+    auto username = "User " + conn.id;
+    addPlayer(username, conn);
 }
 
-// GameManager::GameManager(std::string name, User owner, std::vector<Connection> clients) :
-//     owner(owner),
-//     gameName(name),
-//     audience(false),
-//     clients(clients),
-//     playerRange(std::make_pair(2, 8)) { //temp playerRange value
-//     // Initialize the GameManager with the owner and game name
-//     // Set the initial conditions
-//     // Adjust playerRange as needed
+// Add a player with the given name
+// bool GameManager::addPlayer(std::string name) {
+//     if (playerMap->size() >= playerRange.first && playerMap->size() < playerRange.second) {
+//         // Check if the number of players is within the allowed range
+//         auto result = playerMap->emplace(name, User(name, playerMap->size() + 1));
+//         return result.second; // Return true if the insertion was successful
+//     }
+//     return false; // Return false if the player limit has been reached
 // }
 
-// Add a player with the given name
-bool GameManager::addPlayer(std::string name) {
+bool GameManager::addPlayer(std::string name, Connection& conn) {
+
     if (playerMap->size() >= playerRange.first && playerMap->size() < playerRange.second) {
         // Check if the number of players is within the allowed range
-        auto result = playerMap->emplace(name, User(name, playerMap->size() + 1));
+
+        // add a mapping of a new User and their Connection to GameManager.
+        auto result = playerMap->emplace(User(name), conn);
         return result.second; // Return true if the insertion was successful
     }
     return false; // Return false if the player limit has been reached
 }
 
-// Remove a player with the given name
+// Remove a player with the given name. Returns true if removed successfully
 bool GameManager::removePlayer(std::string name) {
-    auto it = playerMap->find(name);
+    
+    auto it = std::find_if(playerMap.get()->begin(), playerMap.get()->end(),
+                           [name](const std::pair<const User, Connection>& pair) {
+                               return pair.first.getName() == name;
+                           });
+
+    // Check if the User object was found
     if (it != playerMap->end()) {
-        // Check if the player exists
+        // Remove the User-Connection pair from the map
         playerMap->erase(it);
-        return true; // Return true if the player was removed
-    }
-    return false; // Return false if the player doesn't exist
-}
-
-// Add a spectator with the given name
-bool GameManager::addSpectator(std::string name) {
-    if (spectatorMap->find(name) == spectatorMap->end()) {
-        spectatorMap->emplace(name, User(name, spectatorMap->size() + 1));
-        return true; // Return true if the spectator was added
-    }
-    return false; // Return false if the spectator already exists
-}
-
-// Remove a spectator with the given name
-bool GameManager::removeSpectator(std::string name) {
-    auto it = spectatorMap->find(name);
-    if (it != spectatorMap->end()) {
-        spectatorMap->erase(it);
-        return true; // Return true if the spectator was removed
-    }
-    return false; // Return false if the spectator doesn't exist
+        return true;
+    } 
+    return false;
 }
 
 // Check if a player with the given name exists
+// TODO - use this same function in removePlayer()
 bool GameManager::hasPlayer(std::string name) {
-    return playerMap->find(name) != playerMap->end();
+    
+    auto it = std::find_if(playerMap.get()->begin(), playerMap.get()->end(),
+                           [name](const std::pair<const User, Connection>& pair) {
+                               return pair.first.getName() == name;
+                           });
+
+    // Check if the User object was found
+    if (it != playerMap->end()) {
+        // Remove the User-Connection pair from the map
+        return true;
+    } 
+    return false;
 }
 
-// Check if the game has an audience
-bool GameManager::hasAudience() {
-    return !spectatorMap->empty();
+bool GameManager::hasConnection(const Connection& conn) {
+    
+    auto it = std::find_if(playerMap.get()->begin(), playerMap.get()->end(),
+                           [conn](const std::pair<const User, Connection>& pair) {
+                               return pair.second == conn;
+                           });
+
+    // Check if the User object was found
+    if (it != playerMap->end()) {
+        // Remove the User-Connection pair from the map
+        return true;
+    } 
+    return false;
 }
+
+// returns all the connections in the game
+std::vector<Connection> GameManager::getConnections() {
+    std::vector<Connection> connections;
+
+    for (const auto& conn : playerMap){
+        connections.push_back(conn.second);
+    }
+    return connections;
+}
+
+std::string_view GameManager::getGameName() const {
+    return gameName;
+};
 
 std::vector<Setup> GameManager::getSetups() {
     return setups;
