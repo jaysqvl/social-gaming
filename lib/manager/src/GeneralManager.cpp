@@ -54,6 +54,27 @@ void GeneralManager::createGame(const std::string_view& gameName, Connection& co
     gm.push_back(std::make_unique<GameManager>(gameName, conn, this));
 }
 
+void GeneralManager::joinGame(const std::string_view& gameName, Connection& conn){
+    // find the game in the gm list. If it exists, join.
+    for (auto game : gm){
+        if (game.getGameName() == gameName){
+            game.addPlayer(std::to_string(conn.id), conn);
+            std::cout << "GeneralManager::Join " << gameName << std::endl;
+            return;
+        }
+    }
+    std::cout << "Joining game " << gameName << " failed" << std::endl; 
+}
+
+// this function gets all the connections and usernames of people in the same room as an input connection
+std::vector<Connection> GeneralManager::getOpponents(Connection& conn){
+    for (auto game : gm){
+        if (game.hasConnection(conn)){
+            return game.getConnections();
+        }
+    }
+}
+
 // This function parses a command from a string_view and stores its elements in a vector.
 // It splits the input text by spaces and stores the resulting substrings in the 'elems' vector.
 void ParseCommand(std::vector<std::string_view> &elems, const std::string_view &text) {
@@ -87,6 +108,10 @@ void GeneralManager::processMessages(Server &server, std::deque<Packet> &outgoin
 
             // Handle different commands
             if (command == "quit") {
+
+                // remove the client from the appropriate GameManager
+                // TODO 
+
                 // Disconnect the client
                 server.disconnect(message.connection);
 
@@ -97,46 +122,72 @@ void GeneralManager::processMessages(Server &server, std::deque<Packet> &outgoin
 
             } else if (command == "create" && elems.size() >= 2){
                 // Creates a new game, and passes in the user who created it. The game name is chosen by the user.
-                std::cout << "GeneralManager::Create" << std::endl;
+                std::cout << "GeneralManager::Create " << elems[1] << std::endl;
                 
                 auto userConnection = getSender(message);
 
                 // elems[1] is the game name that the message sender chose.
-                createGame(elems[1], userConnection);
+                createGame(std::string(elems[1]), userConnection);
 
             } else if (command == "join" && elems.size() >= 2) {
                 // Handle the 'join' command by updating the room
-                std::cout << "GeneralManager::Join " << message.connection.id << " " << elems[1] << std::endl;
-                info[message.connection.id].room = std::string(elems[1]);
+
+                auto userConnection = getSender(message);
+                joinGame(elems[1], userConnection);
+
+                // info[message.connection.id].room = std::string(elems[1]);
 
             } else if (command == "changename" && elems.size() >= 2) {
                 // Handle the 'changename' command by updating the username
                 std::cout << "GeneralManager::ChangeName " << message.connection.id << " => " << elems[1] << std::endl;
-                info[message.connection.id].username = std::string(elems[1]);
+                // info[message.connection.id].username = std::string(elems[1]);
             }
 
         } else if (!FirstLine(message.text).empty()) {
             // Process regular messages and construct outgoing messages
-            const auto &id = message.connection.id;
-            const auto &name = info[id].username;
+            // const auto &id = message.connection.id;
+            // const auto &name = info[id].username;
 
-            std::ostringstream out;
-            out << (name.empty() ? std::to_string(id) : name) << "> " << FirstLine(message.text);
-            outgoing.push_back(Packet{PacketType::FROM, message.connection, out.str()});
+            // get the sender of the message
+            auto userConnection = getSender(message);
+
+            // get all the connections and usernames that the sender should send to
+            auto userOpponents = getOpponents(userConnection);
+
+
+
+            buildOutgoing(outgoing, Packet{PacketType::FROM, userConnection, message.text}, userOpponents);
+
+            // std::ostringstream out;
+            // out << (name.empty() ? std::to_string(id) : name) << "> " << FirstLine(message.text);
+            // outgoing.push_back(Packet{PacketType::FROM, message.connection, out.str()});
         }
     }
 }
 
-// This function builds outgoing messages for clients in the same room as the sender.
-void GeneralManager::buildOutgoing(std::deque<Message> &outgoing, const Packet &packet) {
-    const auto &room = info[packet.connection.id].room; // Get the room of the sender
+// // This function builds outgoing messages for clients in the same room as the sender.
+// void GeneralManager::buildOutgoing(std::deque<Message> &outgoing, const Packet &packet) {
+//     // const auto &room = info[packet.connection.id].room; // Get the room of the sender
+
+//     // Use a range-based for loop to iterate over the 'clients' vector
+//     for (auto& client : clients) {
+//         // Check if the client is in the same room as the sender
+//         if (info[client.id].room == room) {
+//             // If so, add the message to the 'outgoing' queue for that client
+//             outgoing.push_back({client, packet.text});
+//         }
+//     }
+// }
+
+// this function builds outgoing packets for a list of connections
+void GeneralManager::buildOutgoing(std::deque<Message> &outgoing, const Packet &packet, std::vector<Connection> conns) {
+    // const auto &room = info[packet.connection.id].room; // Get the room of the sender
 
     // Use a range-based for loop to iterate over the 'clients' vector
-    for (auto& client : clients) {
+    for (auto& conn : conns) {
         // Check if the client is in the same room as the sender
-        if (info[client.id].room == room) {
             // If so, add the message to the 'outgoing' queue for that client
-            outgoing.push_back({client, packet.text});
+            outgoing.push_back({conn, packet.text});
         }
     }
 }
