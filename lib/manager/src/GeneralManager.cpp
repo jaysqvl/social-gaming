@@ -168,7 +168,7 @@ void GeneralManager::processMessages(Server &server, std::deque<Packet> &outgoin
             auto userOpponents = getOpponents(userConnection);
 
 
-
+            // send the message to the necessary opponents
             buildOutgoing(outgoing, Packet{PacketType::FROM, userConnection, message.text}, userOpponents);
 
             // std::ostringstream out;
@@ -193,14 +193,14 @@ void GeneralManager::processMessages(Server &server, std::deque<Packet> &outgoin
 // }
 
 // this function builds outgoing packets for a list of connections
-void GeneralManager::buildOutgoing(std::deque<Message> &outgoing, const Packet &packet, std::vector<Connection> conns) {
+void GeneralManager::buildOutgoing(std::deque<Packet> &outgoing, const Packet &packet, std::vector<Connection> conns) {
     // const auto &room = info[packet.connection.id].room; // Get the room of the sender
 
     // Use a range-based for loop to iterate over the 'clients' vector
     for (auto& conn : conns) {
         // Check if the client is in the same room as the sender
             // If so, add the message to the 'outgoing' queue for that client
-            outgoing.push_back({conn, packet.text});
+            outgoing.push_back(packet);
         }
     }
 }
