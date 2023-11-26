@@ -30,8 +30,9 @@ private:
 
     // using this, you can send commands back to the parent general manager.
     GeneralManager* generalManager;
+ 
+    // std::vector<Connection> clients;
 
-    std::vector<Connection> clients;
     // Game game;
     std::string_view gameName;
     bool audience;
@@ -51,26 +52,31 @@ private:
     // //A map holding key value pairs to store a unique user's name, as well as the data for that user
 
     // TODO - fix / change this.
-    std::shared_ptr<std::map<std::string, User>> playerMap = std::make_shared<std::map<std::string, User>>();
-    std::shared_ptr<std::map<std::string, User>> spectatorMap = std::make_shared<std::map<std::string, User>>();
+    // std::shared_ptr<std::map<std::string, User>> playerMap = std::make_shared<std::map<std::string, User>>();
+    
+    // Maps connection to User
+    // Each "user" has a connection. Hence, the map will be user to connection.
+    // Note - I removed "ID" from User objects because we want to abstract away the idea of a connection.
+    // Otherwise, this leads to unwanted coupling!
+    std::shared_ptr<std::map<User, Connection>> playerMap = std::make_shared<std::map<User, Connection>>();
 
 public:
     
-    // TODO - change back to users maybe?
-
     GameManager(std::string_view name, Connection& conn, GeneralManager* generalManager);
     // GameManager(std::string name, User owner, std::vector<Connection> clients);
-    bool addPlayer(std::string name);
+    // bool addPlayer(std::string name);
+    bool addPlayer(std::string name, Connection& conn);
     bool removePlayer(std::string name);
-    bool addSpectator(std::string name);
-    bool removeSpectator(std::string name);
     bool hasPlayer(std::string name);
-    bool hasAudience();
+    bool hasConnection(const Connection& conn); 
+
+    std::string_view getGameName() const;
 
     // function that sends message to a list of players in the game
 
 
     std::vector<Setup> getSetups();
+    std::vector<Connection> getConnections();
     // std::map<std::string, ElementPtr> getConstants();
     // std::map<std::string, ElementPtr> getVariables();
 
