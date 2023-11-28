@@ -90,19 +90,13 @@ void Visitor::RulesSetNode::accept(Visitor &visitor) const {
     visitor.visit(*this);
 }
 
-Visitor::BodyNode::BodyNode(void) {}
+Visitor::BodyNode::BodyNode() {}
+
+Visitor::BodyNode::BodyNode(std::vector<ts::Node> nodes) : gameRuleNodes(nodes) {}
 
 void Visitor::BodyNode::accept(Visitor &visitor) const {
     visitor.visit(*this);
 }
-
-void Visitor::BodyNode::addRuleToGameRules(std::unique_ptr<GameRuleNode> newRule) {
-    gameRules.emplace_back(std::move(newRule));
-}
-
-// std::vector<std::unique_ptr<Visitor::GameRuleNode>> Visitor::BodyNode::getGameRules() {
-//     return gameRules;
-// }
 
 //TODO: implement game rule constructors and accept functions!
 Visitor::GameRuleNode::GameRuleNode() {}
@@ -268,6 +262,7 @@ Visitor::Parser::visitPerAudience(const ts::Node &node) {
     return std::make_unique<PerAudienceNode>(std::move(valueMap));
 }
 
+//Might not be necessary
 std::unique_ptr<Visitor::RulesSetNode>
 Visitor::Parser::visitRules(const ts::Node &node) {
     std::unique_ptr<BodyNode> rulesNode = 
@@ -280,25 +275,18 @@ Visitor::Parser::visitRules(const ts::Node &node) {
 std::unique_ptr<Visitor::BodyNode>
 Visitor::Parser::visitRulesBody(const ts::Node &node) {
     ts::Cursor cursor = node.getCursor();
-    //std::map<std::unique_ptr<StringNode>, std::unique_ptr<StringNode>> values;
+    std::vector<ts::Node> gameRules;
     if (cursor.gotoFirstChild()) {
         do {
             ts::Node child = cursor.getCurrentNode();
             std::cout << child.getType() << " " << child.getSymbol() << std::endl;
             // if a rule is found, add to the body by getting the child
-            if (child.getSymbol() == 85) { // identifier
-                
-            }
-
-            if (child.getSymbol() == 120) { //expression
-
-            }
-
             //TODO: abstract the code in here so we can handle nested for loops
             //initial rule node handling (NEEDS TO BE ABSTRACTED)
             if (child.getSymbol() == 99) {
                 std::cout << "rule found" << std::endl;
                 std::cout << child.getChild(0).getType() << " " << child.getChild(0).getSymbol() << std::endl;
+                gameRules.push_back(child);
                 ts::Node ruleTypeNode = child.getChild(0);
                 if (ruleTypeNode.getSymbol() == 100) {
                     std::cout << "for loop found" << std::endl;
@@ -308,6 +296,14 @@ Visitor::Parser::visitRulesBody(const ts::Node &node) {
                         do {
                             ts::Node forLoopKid = forLoopCursor.getCurrentNode();
                             std::cout << forLoopKid.getType() << " " << forLoopKid.getSymbol() << std::endl << std::endl;
+
+                            if (child.getSymbol() == 85) { // for loop "identifier"
+
+                            }
+
+                            if (child.getSymbol() == 120) { //expression
+
+                            }
 
                             //TODO: implement what to do with the rules body - discard, messages, and parallel for probably need to look like this
                             if (forLoopKid.getSymbol() == 131) {
@@ -361,16 +357,39 @@ Visitor::Parser::visitRulesBody(const ts::Node &node) {
                                     std::cout << "end for loop body" << std::endl << std::endl;
                                 }
                             }
-
-
-
                         } while (forLoopCursor.gotoNextSibling());
                     }
                 }
             }
         } while (cursor.gotoNextSibling());
     }
-    return std::make_unique<BodyNode>();
+
+    std::cout << "nodes going into a body node:" << std::endl;
+    for (auto node : gameRules) {
+        std::cout << node.getType() << " " << node.getSymbol() << std::endl;
+    }
+    return std::make_unique<BodyNode>(gameRules);
+}
+
+//might need to add more
+std::unique_ptr<Visitor::GameRuleNode> 
+Visitor::Parser::visitGameRule(const ts::Node &node) {
+    size_t nodeSymbolNumber = node.getSymbol();
+    switch (nodeSymbolNumber) {
+        case 100:
+            //TODO: create a ForLoopNode? or just some way of putting the data into something manageable
+            break;
+        case 111:
+            //Todo: DiscardNode
+            break;
+        case 118:
+            //todo: Message handling/visitation
+            break;
+        case 102:
+            //todo: parallel for
+            break;
+    }
+    return std::make_unique<GameRuleNode>();
 }
 
 std::unique_ptr<Visitor::SetupRuleNode>

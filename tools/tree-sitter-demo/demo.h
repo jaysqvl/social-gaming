@@ -108,13 +108,10 @@ struct RulesSetNode : public Node {
 };
 
 struct BodyNode : public Node {
-    std::vector<std::unique_ptr<GameRuleNode>> gameRules;
+    std::vector<ts::Node> gameRuleNodes;
     BodyNode(void);
+    BodyNode(std::vector<ts::Node> nodes);
     void accept(Visitor &visitor) const override;
-    void addRuleToGameRules(std::unique_ptr<GameRuleNode> newRule);
-
-    //function used for debug purposes
-    //std::vector<std::unique_ptr<GameRuleNode>> getGameRules();
 };
 
 struct GameRuleNode : public Node {
@@ -122,6 +119,7 @@ struct GameRuleNode : public Node {
     size_t ruleSymbol;
     GameRuleNode();
     GameRuleNode(std::string type, size_t symbol);
+    //GameRuleNode(const Visitor::GameRuleNode&);
     void accept(Visitor &visitor) const override;
 };
 
@@ -324,6 +322,7 @@ private:
     std::unique_ptr<PerAudienceNode> visitPerAudience(const ts::Node &);
     std::unique_ptr<RulesSetNode> visitRules(const ts::Node &);
     std::unique_ptr<BodyNode> visitRulesBody(const ts::Node &);
+    std::unique_ptr<GameRuleNode> visitGameRule(const ts::Node &);
     std::unique_ptr<SetupRuleNode> visitSetupRule(const ts::Node &);
     std::unique_ptr<ValueMapNode> visitValueMap(const ts::Node &);
     std::unique_ptr<StringNode> visitString(const ts::Node &);
