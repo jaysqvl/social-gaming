@@ -98,6 +98,27 @@ void Visitor::BodyNode::accept(Visitor &visitor) const {
     visitor.visit(*this);
 }
 
+//todo: move code from visit rules body into here
+void Visitor::BodyNode::handleGameRuleNodes() {
+    for (auto node : gameRuleNodes) {
+        size_t nodeSymbolNumber = node.getSymbol();
+        switch (nodeSymbolNumber) {
+            case 100:
+                //TODO: create a ForLoopNode? or just some way of putting the data into something manageable
+                break;
+            case 111:
+                //Todo: DiscardNode
+                break;
+            case 118:
+                //todo: Message handling/visitation
+                break;
+            case 102:
+                //todo: parallel for
+                break;
+        }
+    }
+}
+
 //TODO: implement game rule constructors and accept functions!
 Visitor::GameRuleNode::GameRuleNode() {}
 
@@ -267,6 +288,8 @@ std::unique_ptr<Visitor::RulesSetNode>
 Visitor::Parser::visitRules(const ts::Node &node) {
     std::unique_ptr<BodyNode> rulesNode = 
         visitRulesBody(node.getChildByFieldName("body"));
+
+    rulesNode.handleGameRuleNodes();
     //TODO: have constructor of rules node taking in the node of the body
     return std::make_unique<RulesSetNode>();
 }
@@ -371,24 +394,9 @@ Visitor::Parser::visitRulesBody(const ts::Node &node) {
     return std::make_unique<BodyNode>(gameRules);
 }
 
-//might need to add more
 std::unique_ptr<Visitor::GameRuleNode> 
 Visitor::Parser::visitGameRule(const ts::Node &node) {
-    size_t nodeSymbolNumber = node.getSymbol();
-    switch (nodeSymbolNumber) {
-        case 100:
-            //TODO: create a ForLoopNode? or just some way of putting the data into something manageable
-            break;
-        case 111:
-            //Todo: DiscardNode
-            break;
-        case 118:
-            //todo: Message handling/visitation
-            break;
-        case 102:
-            //todo: parallel for
-            break;
-    }
+    //TODO: add more.
     return std::make_unique<GameRuleNode>();
 }
 

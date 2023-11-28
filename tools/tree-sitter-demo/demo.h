@@ -112,6 +112,10 @@ struct BodyNode : public Node {
     BodyNode(void);
     BodyNode(std::vector<ts::Node> nodes);
     void accept(Visitor &visitor) const override;
+
+    //we might want this as a different return type later or in 
+    //a different spot; leaving it as void for now
+    void handleGameRuleNodes();
 };
 
 struct GameRuleNode : public Node {
