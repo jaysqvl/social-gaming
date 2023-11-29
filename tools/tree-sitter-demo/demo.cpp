@@ -282,44 +282,43 @@ Visitor::Parser::visitRules(const ts::Node &node) {
 }
 
 // Helper Functions for visitRulesBody
-void printNodes(const std::vector<ts::Node> &nodes) {
-    std::cout << "nodes going into a body node:" << std::endl;
-    for (const auto &node : nodes) {
-        std::cout << node.getType() << " " << node.getSymbol() << std::endl;
-    }
-}
+// void printNodes(const std::vector<ts::Node> &nodes) {
+//     std::cout << "nodes going into a body node:" << std::endl;
+//     for (const auto &node : nodes) {
+//         std::cout << node.getType() << " " << node.getSymbol() << std::endl;
+//     }
+// }
 
 void processDiscard(const ts::Node &discardNode) {
     ts::Cursor discardCursor = discardNode.getCursor();
-
-    while (discardCursor.gotoNextSibling()) {
+     do {
         ts::Node discardKid = discardCursor.getCurrentNode();
         std::cout << "  " << discardKid.getChild(0).getType() << " " << discardKid.getChild(0).getSymbol() << std::endl << std::endl;
         std::cout << "  " << discardKid.getChild(1).getType() << " " << discardKid.getChild(1).getSymbol() << std::endl << std::endl;
-    }
+    } while (discardCursor.gotoNextSibling());
 }
 
 void processMessage(const ts::Node &messageNode) {
     ts::Cursor messageCursor = messageNode.getCursor();
 
-    while (messageCursor.gotoNextSibling()) {
+    do {
         ts::Node messageKid = messageCursor.getCurrentNode();
         std::cout << "  " << messageKid.getChild(0).getType() << " " << messageKid.getChild(0).getSymbol() << std::endl << std::endl;
         std::cout << "  " << messageKid.getChild(1).getType() << " " << messageKid.getChild(1).getSymbol() << std::endl << std::endl;
-    }
+    } while (messageCursor.gotoNextSibling());
 }
 
 void processParallelFor(const ts::Node &parallelNode) {
     ts::Cursor parallelCursor = parallelNode.getCursor();
 
-    while (parallelCursor.gotoNextSibling()) {
+    do {
         ts::Node parallelKid = parallelCursor.getCurrentNode();
         std::cout << "  " << parallelKid.getChild(0).getType() << " " << parallelKid.getChild(0).getSymbol() << std::endl << std::endl;
         std::cout << "  " << parallelKid.getChild(1).getType() << " " << parallelKid.getChild(1).getSymbol() << std::endl << std::endl;
         std::cout << "  " << parallelKid.getChild(2).getType() << " " << parallelKid.getChild(2).getSymbol() << std::endl << std::endl;
         std::cout << "  " << parallelKid.getChild(3).getType() << " " << parallelKid.getChild(3).getSymbol() << std::endl << std::endl;
         std::cout << "  " << parallelKid.getChild(4).getType() << " " << parallelKid.getChild(4).getSymbol() << std::endl << std::endl;
-    }
+    } while (parallelCursor.gotoNextSibling());
 }
 
 void processRuleBodyType(const ts::Node &ruleBodyNode) {
@@ -335,56 +334,77 @@ void processRuleBodyType(const ts::Node &ruleBodyNode) {
 }
 
 void processRulesBody(const ts::Node &rulesBodyNode) {
+    std::cout << "for loop rules body" << std::endl;
     ts::Cursor rulesCursor = rulesBodyNode.getCursor();
 
-    while (rulesCursor.gotoNextSibling()) {
-        ts::Node rulesKid = rulesCursor.getCurrentNode();
-        processRuleBodyType(rulesKid);
-    }
 
-    std::cout << "end for loop body" << std::endl << std::endl;
+    if (rulesCursor.gotoFirstChild()) {
+        do {
+            ts::Node rulesKid = rulesCursor.getCurrentNode();
+            std::cout << rulesKid.getType() << " " << rulesKid.getSymbol() << std::endl << std::endl;
+            if (rulesKid.getSymbol() == 99) {
+                std::cout << "  " << rulesKid.getChild(0).getType() << " " << rulesKid.getChild(0).getSymbol() << std::endl << std::endl;
+                processRuleBodyType(rulesKid);
+            }
+        } while (rulesCursor.gotoNextSibling());
+        std::cout << "end for loop body" << std::endl << std::endl;
+    }
 }
 
 void processForLoop(const ts::Node &forLoopNode) {
+    std::cout << "for loop found" << std::endl;
     ts::Cursor forLoopCursor = forLoopNode.getCursor();
 
-    while (forLoopCursor.gotoNextSibling()) {
+    if (forLoopCursor.gotoFirstChild()) { //Handles keyword, ident., in, expression, and body
+    do {
         ts::Node forLoopKid = forLoopCursor.getCurrentNode();
-
+        std::cout << forLoopKid.getType() << " " << forLoopKid.getSymbol() << std::endl << std::endl;
+        
+        // if (child.getSymbol() == 85) { // for loop "identifier"
+        
+        // }
+        
+        // if (child.getSymbol() == 120) { //expression
+        
+        // }
+        
+        //TODO: implement what to do with the rules body - discard, messages, and parallel for probably need to look like this
         if (forLoopKid.getSymbol() == 131) {
             processRulesBody(forLoopKid);
         }
+        } while (forLoopCursor.gotoNextSibling());
     }
 }
 
-void handleRuleNode(const ts::Node &ruleNode, std::vector<ts::Node> &gameRules) {
-    gameRules.push_back(ruleNode);
-
-    ts::Node ruleTypeNode = ruleNode.getChild(0);
-
-    if (ruleTypeNode.getSymbol() == 100) {
-        processForLoop(ruleTypeNode);
-    }
-}
-
-void processRuleNodes(ts::Cursor &cursor, std::vector<ts::Node> &gameRules) {
-    while (cursor.gotoNextSibling()) {
-        ts::Node child = cursor.getCurrentNode();
-
-        if (child.getSymbol() == 99) {
-            handleRuleNode(child, gameRules);
-        }
-    }
-}
-
-std::unique_ptr<Visitor::BodyNode> Visitor::Parser::visitRulesBody(const ts::Node &node) {
+//body is the field of rules; rule is child of body
+std::unique_ptr<Visitor::BodyNode>
+Visitor::Parser::visitRulesBody(const ts::Node &node) {
     ts::Cursor cursor = node.getCursor();
     std::vector<ts::Node> gameRules;
+    
+    if (cursor.gotoFirstChild()) {
+        do {
+            ts::Node child = cursor.getCurrentNode();
+            std::cout << child.getType() << " " << child.getSymbol() << std::endl;
+            // if a rule is found, add to the body by getting the child
+            //TODO: abstract the code in here so we can handle nested for loops
+            //initial rule node handling (NEEDS TO BE ABSTRACTED)
+            if (child.getSymbol() == 99) {
+                std::cout << "rule found" << std::endl;
+                std::cout << child.getChild(0).getType() << " " << child.getChild(0).getSymbol() << std::endl;
+                gameRules.push_back(child);
+                ts::Node ruleTypeNode = child.getChild(0);
+                if (ruleTypeNode.getSymbol() == 100) {
+                    processForLoop(ruleTypeNode);
+                }
+            }
+        } while (cursor.gotoNextSibling());
+    }
 
-    processRuleNodes(cursor, gameRules);
-
-    printNodes(gameRules);
-
+    std::cout << "nodes going into a body node:" << std::endl;
+    for (auto node : gameRules) {
+        std::cout << node.getType() << " " << node.getSymbol() << std::endl;
+    }
     return std::make_unique<BodyNode>(gameRules);
 }
 
