@@ -163,6 +163,10 @@ void Visitor::RangeNode::accept(Visitor &visitor) const {
     visitor.visit(*this);
 }
 
+void Visitor::ForLoopNode::accept(Visitor &visitor) const {
+    visitor.visit(*this);
+}
+
 Visitor::Parser::Parser(const ts::Language &language, const std::string &source) :
     language{language}, source{source}, visitMap{
         { 90, (Command)&Parser::visitGame }
@@ -289,28 +293,32 @@ Visitor::Parser::visitRules(const ts::Node &node) {
 //     }
 // }
 
+//TODO: handle the expression node (child idx 1) and the qualified identifier (child idx 3) - amos
 void processDiscard(const ts::Node &discardNode) {
     ts::Cursor discardCursor = discardNode.getCursor();
      do {
         ts::Node discardKid = discardCursor.getCurrentNode();
         std::cout << "  " << discardKid.getChild(0).getType() << " " << discardKid.getChild(0).getSymbol() << std::endl << std::endl;
         std::cout << "  " << discardKid.getChild(1).getType() << " " << discardKid.getChild(1).getSymbol() << std::endl << std::endl;
+        std::cout << "  " << discardKid.getChild(2).getType() << " " << discardKid.getChild(2).getSymbol() << std::endl << std::endl;
+        std::cout << "  " << discardKid.getChild(3).getType() << " " << discardKid.getChild(3).getSymbol() << std::endl << std::endl;
     } while (discardCursor.gotoNextSibling());
 }
 
+//TODO: handle the player_set node (child idx 1) and qualified identifier (child idx 2) -amos
 void processMessage(const ts::Node &messageNode) {
     ts::Cursor messageCursor = messageNode.getCursor();
-
     do {
         ts::Node messageKid = messageCursor.getCurrentNode();
         std::cout << "  " << messageKid.getChild(0).getType() << " " << messageKid.getChild(0).getSymbol() << std::endl << std::endl;
         std::cout << "  " << messageKid.getChild(1).getType() << " " << messageKid.getChild(1).getSymbol() << std::endl << std::endl;
+        std::cout << "  " << messageKid.getChild(2).getType() << " " << messageKid.getChild(2).getSymbol() << std::endl << std::endl;
     } while (messageCursor.gotoNextSibling());
 }
 
+//TODO: handle parallel for (if needed - child idx 0), identifier (child idx 1), expression (3) and body (4) - jay
 void processParallelFor(const ts::Node &parallelNode) {
     ts::Cursor parallelCursor = parallelNode.getCursor();
-
     do {
         ts::Node parallelKid = parallelCursor.getCurrentNode();
         std::cout << "  " << parallelKid.getChild(0).getType() << " " << parallelKid.getChild(0).getSymbol() << std::endl << std::endl;
@@ -330,14 +338,16 @@ void processRuleBodyType(const ts::Node &ruleBodyNode) {
         processMessage(rulesType);
     } else if (rulesType.getSymbol() == 102) { // Parallel For
         processParallelFor(rulesType);
+    } else if (rulesType.getSymbol() == 100) { // Regular For
+        processForLoop(rulesType);
+    } else if (rulesType.getSymbol() == 119) { // Scores
+        //TODO: make a func to process scores - david
     }
 }
 
 void processRulesBody(const ts::Node &rulesBodyNode) {
     std::cout << "for loop rules body" << std::endl;
     ts::Cursor rulesCursor = rulesBodyNode.getCursor();
-
-
     if (rulesCursor.gotoFirstChild()) {
         do {
             ts::Node rulesKid = rulesCursor.getCurrentNode();
@@ -387,8 +397,6 @@ Visitor::Parser::visitRulesBody(const ts::Node &node) {
             ts::Node child = cursor.getCurrentNode();
             std::cout << child.getType() << " " << child.getSymbol() << std::endl;
             // if a rule is found, add to the body by getting the child
-            //TODO: abstract the code in here so we can handle nested for loops
-            //initial rule node handling (NEEDS TO BE ABSTRACTED)
             if (child.getSymbol() == 99) {
                 std::cout << "rule found" << std::endl;
                 std::cout << child.getChild(0).getType() << " " << child.getChild(0).getSymbol() << std::endl;
@@ -400,7 +408,6 @@ Visitor::Parser::visitRulesBody(const ts::Node &node) {
             }
         } while (cursor.gotoNextSibling());
     }
-
     std::cout << "nodes going into a body node:" << std::endl;
     for (auto node : gameRules) {
         std::cout << node.getType() << " " << node.getSymbol() << std::endl;
