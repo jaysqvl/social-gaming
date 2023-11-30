@@ -12,6 +12,9 @@ TSLanguage* tree_sitter_socialgaming();
 
 std::string loadFile(const std::string &filename);
 
+//TODO: add all helper function forward declarations
+void processForLoop(const ts::Node &forLoopNode);
+
 namespace Visitor {
     struct Visitor;
     struct Node {
@@ -181,9 +184,7 @@ namespace Visitor {
         expression(std::move(expression)), 
         body(std::move(body)) {}
 
-        void accept(Visitor &visitor) const override {
-            visitor.visit(*this);
-        }
+        void accept(Visitor &visitor) const override;
     };
 
     struct Visitor {
