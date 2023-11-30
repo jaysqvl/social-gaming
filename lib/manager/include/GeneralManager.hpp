@@ -13,21 +13,12 @@ class GameManager;
 
 class GeneralManager : public Manager {
 public:
-    // struct ClientInfo {
-    //     std::string room;
-    //     std::string username;
-    // };
-
-
     GeneralManager(void);
 
     void onConnect(Connection conn) override;
     void onDisconnect(Connection conn) override;
     void processMessages(Server &server, std::deque<Packet> &outgoing, const std::deque<Message>& incoming) override;
-    // void buildOutgoing(std::deque<Message> &outgoing, const Packet &packet) override;
-
-    // TODO - this might need to be override
-    void GeneralManager::buildOutgoing(std::deque<Packet> &outgoing, const Packet &packet, std::vector<Connection> conns);
+    void buildOutgoing(std::deque<Message> &outgoing, const Packet &packet) override;
 
     bool shouldQuit(void) override;
 
@@ -36,12 +27,13 @@ public:
     // joins a game
     void joinGame(const std::string_view& gameName, Connection& conn);
 
-    std::vector<Connection> getOpponents(Connection& conn);
+    std::vector<Connection> getOpponents(const Connection& conn);
+    std::string getUsername(const Connection& conn);
 
 private:
     std::vector<Connection> clients;
     // std::map<uintptr_t, ClientInfo> info;
     bool quit;
 
-    std::vector<GameManager> gm;
+    std::vector<std::unique_ptr<GameManager>> gm;
 };
