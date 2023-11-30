@@ -28,59 +28,52 @@ class GameManager {
 private:
     //using RulePtr = std::shared_ptr<Rule>;
 
-    // using this, you can send commands back to the parent general manager.
-    GeneralManager* generalManager;
- 
-    // std::vector<Connection> clients;
-
     // Game game;
-    std::string_view gameName;
+    std::string gameName;
     bool audience;
     std::pair<int, int> playerRange;
+    
+    // TODO - add back in.
+    // User owner
 
-
-    // User owner;
     // // Stores the setups the game has the parse and execute
     std::vector<Setup> setups;
 
-    // //TODO: FIX CIRCULAR DEPENDENCY
+    // //TODO: I think this is all removable.
     // std::vector<RulePtr> rules; // game manager should have rule, but rule should not have gamemanager
-
     // std::map<std::string, ElementPtr> constants;
     // std::map<std::string, ElementPtr> variables;
 
-    // //A map holding key value pairs to store a unique user's name, as well as the data for that user
-
-    // TODO - fix / change this.
-    // std::shared_ptr<std::map<std::string, User>> playerMap = std::make_shared<std::map<std::string, User>>();
+    // this contains all system messages that are to be collected by general manager.
+    std::vector<Packet> systemMessages;
     
     // Maps connection to User
     // Each "user" has a connection. Hence, the map will be user to connection.
-    // Note - I removed "ID" from User objects because we want to abstract away the idea of a connection.
-    // Otherwise, this leads to unwanted coupling!
     std::shared_ptr<std::map<User, Connection>> playerMap = std::make_shared<std::map<User, Connection>>();
 
 public:
     
-    GameManager(std::string_view name, Connection& conn, GeneralManager* generalManager);
-    // GameManager(std::string name, User owner, std::vector<Connection> clients);
-    // bool addPlayer(std::string name);
-    bool addPlayer(std::string name, Connection& conn);
+    GameManager(std::string_view name, Connection& conn);
+    bool addPlayer(Connection& conn);
     bool removePlayer(std::string name);
     bool hasPlayer(std::string name);
     bool hasConnection(const Connection& conn); 
 
-    std::string_view getGameName() const;
-
-    // function that sends message to a list of players in the game
-
+    std::string getGameName() const;
+    std::string getUsername(const Connection& conn);
 
     std::vector<Setup> getSetups();
     std::vector<Connection> getConnections();
+    std::vector<std::pair<Connection, std::string>> getConnectionsUsernames();
+
+    // TODO - REMOVE
     // std::map<std::string, ElementPtr> getConstants();
     // std::map<std::string, ElementPtr> getVariables();
-
     //std::vector<RulePtr> getRules() { return rules; }
-    void parseAndSetRules();
 
+    void sendSystemMessage(std::string message);
+    // returns the queued systemMessages, and deletes everything currently there.
+    std::vector<Packet> retrieveSystemMessages();
+    
+    void parseAndSetRules();
 };
