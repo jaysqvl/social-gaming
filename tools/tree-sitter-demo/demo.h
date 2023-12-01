@@ -14,6 +14,8 @@ std::string loadFile(const std::string &filename);
 
 //TODO: add all helper function forward declarations
 void processForLoop(const ts::Node &forLoopNode);
+void processMatchEntry(const ts::Node &matchEntryNode);
+void processRulesBody(const ts::Node &rulesBodyNode);
 
 namespace Visitor {
     struct Visitor;
