@@ -342,6 +342,38 @@ void processParallelFor(const ts::Node &parallelNode) {
     } while (parallelCursor.gotoNextSibling());
 }
 
+void processMatch(const ts::Node &matchNode) {
+    ts::Cursor matchCursor = matchNode.getCursor();
+    if (matchCursor.gotoFirstChild()) {
+        do {
+            ts::Node matchKid = matchCursor.getCurrentNode();
+            std::cout << "  " << matchKid.getType() << " " << matchKid.getSymbol() << std::endl << std::endl;
+            if (matchKid.getSymbol() == 120) { // expression
+                //todo: try implementing something similar to the visitExpression function in Parser class
+            } else if (matchKid.getSymbol() == 105) { //match entry (can be multiple)
+                processMatchEntry(matchKid);
+            }
+        } while (matchCursor.gotoNextSibling());
+    }
+}
+ //helper function of the helper to get all the match entries
+void processMatchEntry(const ts::Node &matchEntryNode) {
+    ts::Cursor matchEntryCursor = matchEntryNode.getCursor();
+    if (matchEntryCursor.gotoFirstChild()) {
+        do {
+            ts::Node matchEntryKid = matchEntryCursor.getCurrentNode();
+            std::cout << "    " << matchEntryKid.getType() << " " << matchEntryKid.getSymbol() << std::endl << std::endl;
+            if (matchEntryKid.getSymbol() == 120) { // expression
+                //todo: try implementing something similar to the visitExpression function in Parser class
+            } else if (matchEntryKid.getSymbol() == 131) { // body
+                std::cout << "START MATCH ENTRY BODY" << std::endl;
+                processRulesBody(matchEntryKid);
+                std::cout << "END MATCH ENTRY BODY" << std::endl;
+            }
+        } while (matchEntryCursor.gotoNextSibling());
+    }
+}
+
 void processRuleBodyType(const ts::Node &ruleBodyNode) {
     ts::Node rulesType = ruleBodyNode.getChild(0);
 
@@ -355,11 +387,17 @@ void processRuleBodyType(const ts::Node &ruleBodyNode) {
         processForLoop(rulesType);
     } else if (rulesType.getSymbol() == 119) { // Scores
         //TODO: make a func to process scores - david
+    } else if (rulesType.getSymbol() == 104) { // Match
+        processMatch(rulesType);
+    } else if (rulesType.getSymbol() == 106) { // Extend
+        //TODO
+    } else if (rulesType.getSymbol() == 112) { // Assignment
+        //TODO
     }
 }
 
 void processRulesBody(const ts::Node &rulesBodyNode) {
-    std::cout << "for loop rules body" << std::endl;
+    std::cout << "loop rules body" << std::endl;
     ts::Cursor rulesCursor = rulesBodyNode.getCursor();
     if (rulesCursor.gotoFirstChild()) {
         do {
