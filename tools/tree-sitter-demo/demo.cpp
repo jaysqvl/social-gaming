@@ -155,7 +155,6 @@ void Visitor::BooleanNode::accept(Visitor &visitor) const {
     visitor.visit(*this);
 }
 
-
 Visitor::RangeNode::RangeNode(std::pair<int, int> value) :
     value{value} {}
 
@@ -383,16 +382,6 @@ void processForLoop(const ts::Node &forLoopNode) {
     do {
         ts::Node forLoopKid = forLoopCursor.getCurrentNode();
         std::cout << forLoopKid.getType() << " " << forLoopKid.getSymbol() << std::endl << std::endl;
-        
-        // if (forLoopKid.getSymbol() == 85) { // for loop "identifier"
-        //     processIdentifier(forLoopKid);
-        // }
-        
-        // if (forLoopKid.getSymbol() == 120) { //expression
-        
-        // }
-        
-        //TODO: implement what to do with the rules body - discard, messages, and parallel for probably need to look like this
         if (forLoopKid.getSymbol() == 131) {
             processRulesBody(forLoopKid);
         }
@@ -447,7 +436,7 @@ Visitor::Parser::visitSetupRule(const ts::Node &node) {
     std::unique_ptr<StringNode> prompt =
         visitString(node.getChildByFieldName("prompt"));
 
-// How-To: handle optional types
+    // How-To: handle optional types
     auto rangeChild = node.getChildByFieldName("range");
     auto choicesChild = node.getChildByFieldName("choices");
     auto defaultChild = node.getChildByFieldName("default");
@@ -531,7 +520,7 @@ Visitor::Parser::visitExpression(const ts::Node &node) {
             if (expressionKid.getSymbol() == 121) { //builtin
 
             }
-            if (expressionKid.getSymbol() == 122) { //builtin
+            if (expressionKid.getSymbol() == 122) { //argument_list
 
             }
         } while (cursor.gotoNextSibling());
