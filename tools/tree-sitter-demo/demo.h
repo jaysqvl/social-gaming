@@ -39,6 +39,7 @@ namespace Visitor {
     struct RangeNode;
 
     struct IdentifierNode;
+    struct ExpressionNode;
 
     struct GameNode : public Node {
         std::unique_ptr<ConfigurationNode> configuration;
