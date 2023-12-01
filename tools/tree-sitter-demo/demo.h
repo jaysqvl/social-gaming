@@ -14,6 +14,8 @@ std::string loadFile(const std::string &filename);
 
 //TODO: add all helper function forward declarations
 void processForLoop(const ts::Node &forLoopNode);
+void processMatchEntry(const ts::Node &matchEntryNode);
+void processRulesBody(const ts::Node &rulesBodyNode);
 
 namespace Visitor {
     struct Visitor;
@@ -37,6 +39,9 @@ namespace Visitor {
     struct StringNode;
     struct BooleanNode;
     struct RangeNode;
+
+    struct IdentifierNode;
+    struct ExpressionNode;
 
     struct GameNode : public Node {
         std::unique_ptr<ConfigurationNode> configuration;
@@ -172,18 +177,32 @@ namespace Visitor {
     };
 
     struct ForLoopNode : public Node {
-        std::unique_ptr<Node> identifier; // Node representing the loop variable
+        std::unique_ptr<IdentifierNode> identifier; // Node representing the loop variable
         std::unique_ptr<Node> expression; // Node representing the range or collection being iterated over
         std::unique_ptr<Node> body;       // Node representing the body of the loop
 
         ForLoopNode(
-            std::unique_ptr<Node> identifier, 
+            std::unique_ptr<IdentifierNode> identifier, 
             std::unique_ptr<Node> expression, 
             std::unique_ptr<Node> body)
         : identifier(std::move(identifier)), 
         expression(std::move(expression)), 
         body(std::move(body)) {}
 
+        void accept(Visitor &visitor) const override;
+    };
+
+    struct IdentifierNode : public Node {
+        std::unique_ptr<StringNode> identifierValue;
+
+        IdentifierNode(std::unique_ptr<StringNode> sn);
+        void accept(Visitor &visitor) const override;
+    };
+
+    struct ExpressionNode : public Node {
+        std::unique_ptr<StringNode> expressionValue;
+
+        ExpressionNode(std::unique_ptr<StringNode> sn);
         void accept(Visitor &visitor) const override;
     };
 
@@ -204,6 +223,8 @@ namespace Visitor {
         virtual void visit(const BooleanNode &node) = 0;
         virtual void visit(const RangeNode &node) = 0;
         virtual void visit(const ForLoopNode &node) = 0;
+        virtual void visit(const IdentifierNode &node) = 0;
+        virtual void visit(const ExpressionNode &node) = 0;
     };
 
     struct Printer : public Visitor {
@@ -319,6 +340,16 @@ namespace Visitor {
             std::cout << "For LOOP NODE THING BABY" << std::endl;
         }
 
+        void visit(const IdentifierNode &node) override {
+            printDepth();
+            std::cout << "identifier for a loop: " << node.identifierValue->value << std::endl;
+        }
+
+        void visit(const ExpressionNode &node) override {
+            printDepth();
+            std::cout << "expression for a loop:" << node.expressionValue->value << std::endl;
+        }
+
         size_t depth = 0;
         void printDepth(void) {
             for (size_t i = 0; i < depth; i++) {
@@ -354,5 +385,7 @@ namespace Visitor {
         std::unique_ptr<StringNode> visitString(const ts::Node &);
         std::unique_ptr<BooleanNode> visitBoolean(const ts::Node &);
         std::unique_ptr<RangeNode> visitRange(const ts::Node &);
+        std::unique_ptr<IdentifierNode> visitIdentifier(const ts::Node &);
+        std::unique_ptr<ExpressionNode> visitExpression(const ts::Node &);
     };
 };
