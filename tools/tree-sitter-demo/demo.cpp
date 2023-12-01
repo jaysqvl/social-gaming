@@ -174,6 +174,13 @@ void Visitor::IdentifierNode::accept(Visitor &visitor) const {
     visitor.visit(*this);
 }
 
+Visitor::ExpressionNode::ExpressionNode(std::unique_ptr<StringNode> sn) 
+    : expressionValue(std::move(sn)) {}
+
+void Visitor::ExpressionNode::accept(Visitor &visitor) const {
+    visitor.visit(*this);
+}
+
 Visitor::Parser::Parser(const ts::Language &language, const std::string &source) :
     language{language}, source{source}, visitMap{
         { 90, (Command)&Parser::visitGame }
@@ -411,9 +418,10 @@ Visitor::Parser::visitRulesBody(const ts::Node &node) {
                 ts::Node ruleTypeNode = child.getChild(0);
                 if (ruleTypeNode.getSymbol() == 100) {
                     ts::Node identifierNode = ruleTypeNode.getChild(1);
-                    std::cout << identifierNode.getSymbol() << std::endl;
+                    ts::Node expressionNode = ruleTypeNode.getChild(3);
                     processForLoop(ruleTypeNode);
                     visitIdentifier(identifierNode);
+                    visitExpression(expressionNode);
                 }
             }
         } while (cursor.gotoNextSibling());
@@ -508,7 +516,29 @@ Visitor::Parser::visitRange(const ts::Node &node) {
 std::unique_ptr<Visitor::IdentifierNode> 
 Visitor::Parser::visitIdentifier(const ts::Node &node) {
     std::unique_ptr<StringNode> newStringNode = visitString(node);
+    std::cout << "loop identifier: " << newStringNode->value << std::endl;
     return std::make_unique<IdentifierNode>(std::move(newStringNode));
+}
+
+std::unique_ptr<Visitor::ExpressionNode> 
+Visitor::Parser::visitExpression(const ts::Node &node) {
+    ts::Cursor cursor = node.getCursor();
+    if (cursor.gotoFirstChild()) {
+        do {
+            ts::Node expressionKid = cursor.getCurrentNode();    
+            std::cout << expressionKid.getType() << " " << expressionKid.getSymbol() << std::endl << std::endl;
+            //TODO: handle "builtin" and "argument_list" nodes. the entire expression is already in a string form.
+            if (expressionKid.getSymbol() == 121) { //builtin
+
+            }
+            if (expressionKid.getSymbol() == 122) { //builtin
+
+            }
+        } while (cursor.gotoNextSibling());
+    }
+    std::unique_ptr<StringNode> newStringNode = visitString(node);
+    std::cout << "loop expression: " << newStringNode->value << std::endl;
+    return std::make_unique<ExpressionNode>(std::move(newStringNode));
 }
 
 int main(int argc, char *argv[]) {
