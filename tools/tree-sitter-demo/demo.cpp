@@ -155,7 +155,6 @@ void Visitor::BooleanNode::accept(Visitor &visitor) const {
     visitor.visit(*this);
 }
 
-
 Visitor::RangeNode::RangeNode(std::pair<int, int> value) :
     value{value} {}
 
@@ -164,6 +163,20 @@ void Visitor::RangeNode::accept(Visitor &visitor) const {
 }
 
 void Visitor::ForLoopNode::accept(Visitor &visitor) const {
+    visitor.visit(*this);
+}
+
+Visitor::IdentifierNode::IdentifierNode(std::unique_ptr<StringNode> sn) 
+    : identifierValue(std::move(sn)) {}
+
+void Visitor::IdentifierNode::accept(Visitor &visitor) const {
+    visitor.visit(*this);
+}
+
+Visitor::ExpressionNode::ExpressionNode(std::unique_ptr<StringNode> sn) 
+    : expressionValue(std::move(sn)) {}
+
+void Visitor::ExpressionNode::accept(Visitor &visitor) const {
     visitor.visit(*this);
 }
 
@@ -329,6 +342,38 @@ void processParallelFor(const ts::Node &parallelNode) {
     } while (parallelCursor.gotoNextSibling());
 }
 
+void processMatch(const ts::Node &matchNode) {
+    ts::Cursor matchCursor = matchNode.getCursor();
+    if (matchCursor.gotoFirstChild()) {
+        do {
+            ts::Node matchKid = matchCursor.getCurrentNode();
+            std::cout << "  " << matchKid.getType() << " " << matchKid.getSymbol() << std::endl << std::endl;
+            if (matchKid.getSymbol() == 120) { // expression
+                //todo: try implementing something similar to the visitExpression function in Parser class
+            } else if (matchKid.getSymbol() == 105) { //match entry (can be multiple)
+                processMatchEntry(matchKid);
+            }
+        } while (matchCursor.gotoNextSibling());
+    }
+}
+ //helper function of the helper to get all the match entries
+void processMatchEntry(const ts::Node &matchEntryNode) {
+    ts::Cursor matchEntryCursor = matchEntryNode.getCursor();
+    if (matchEntryCursor.gotoFirstChild()) {
+        do {
+            ts::Node matchEntryKid = matchEntryCursor.getCurrentNode();
+            std::cout << "    " << matchEntryKid.getType() << " " << matchEntryKid.getSymbol() << std::endl << std::endl;
+            if (matchEntryKid.getSymbol() == 120) { // expression
+                //todo: try implementing something similar to the visitExpression function in Parser class
+            } else if (matchEntryKid.getSymbol() == 131) { // body
+                std::cout << "START MATCH ENTRY BODY" << std::endl;
+                processRulesBody(matchEntryKid);
+                std::cout << "END MATCH ENTRY BODY" << std::endl;
+            }
+        } while (matchEntryCursor.gotoNextSibling());
+    }
+}
+
 void processRuleBodyType(const ts::Node &ruleBodyNode) {
     ts::Node rulesType = ruleBodyNode.getChild(0);
 
@@ -342,11 +387,17 @@ void processRuleBodyType(const ts::Node &ruleBodyNode) {
         processForLoop(rulesType);
     } else if (rulesType.getSymbol() == 119) { // Scores
         //TODO: make a func to process scores - david
+    } else if (rulesType.getSymbol() == 104) { // Match
+        processMatch(rulesType);
+    } else if (rulesType.getSymbol() == 106) { // Extend
+        //TODO
+    } else if (rulesType.getSymbol() == 112) { // Assignment
+        //TODO
     }
 }
 
 void processRulesBody(const ts::Node &rulesBodyNode) {
-    std::cout << "for loop rules body" << std::endl;
+    std::cout << "loop rules body" << std::endl;
     ts::Cursor rulesCursor = rulesBodyNode.getCursor();
     if (rulesCursor.gotoFirstChild()) {
         do {
@@ -369,16 +420,6 @@ void processForLoop(const ts::Node &forLoopNode) {
     do {
         ts::Node forLoopKid = forLoopCursor.getCurrentNode();
         std::cout << forLoopKid.getType() << " " << forLoopKid.getSymbol() << std::endl << std::endl;
-        
-        // if (child.getSymbol() == 85) { // for loop "identifier"
-        
-        // }
-        
-        // if (child.getSymbol() == 120) { //expression
-        
-        // }
-        
-        //TODO: implement what to do with the rules body - discard, messages, and parallel for probably need to look like this
         if (forLoopKid.getSymbol() == 131) {
             processRulesBody(forLoopKid);
         }
@@ -403,7 +444,11 @@ Visitor::Parser::visitRulesBody(const ts::Node &node) {
                 gameRules.push_back(child);
                 ts::Node ruleTypeNode = child.getChild(0);
                 if (ruleTypeNode.getSymbol() == 100) {
+                    ts::Node identifierNode = ruleTypeNode.getChild(1);
+                    ts::Node expressionNode = ruleTypeNode.getChild(3);
                     processForLoop(ruleTypeNode);
+                    visitIdentifier(identifierNode);
+                    visitExpression(expressionNode);
                 }
             }
         } while (cursor.gotoNextSibling());
@@ -429,7 +474,7 @@ Visitor::Parser::visitSetupRule(const ts::Node &node) {
     std::unique_ptr<StringNode> prompt =
         visitString(node.getChildByFieldName("prompt"));
 
-// How-To: handle optional types
+    // How-To: handle optional types
     auto rangeChild = node.getChildByFieldName("range");
     auto choicesChild = node.getChildByFieldName("choices");
     auto defaultChild = node.getChildByFieldName("default");
@@ -493,6 +538,34 @@ Visitor::Parser::visitRange(const ts::Node &node) {
     std::string first = std::string(node.getChild(1).getSourceRange(source));
     std::string second = std::string(node.getChild(3).getSourceRange(source));
     return std::make_unique<RangeNode>(std::pair<int, int>(std::stoi(first), std::stoi(second)));
+}
+
+std::unique_ptr<Visitor::IdentifierNode> 
+Visitor::Parser::visitIdentifier(const ts::Node &node) {
+    std::unique_ptr<StringNode> newStringNode = visitString(node);
+    std::cout << "loop identifier: " << newStringNode->value << std::endl;
+    return std::make_unique<IdentifierNode>(std::move(newStringNode));
+}
+
+std::unique_ptr<Visitor::ExpressionNode> 
+Visitor::Parser::visitExpression(const ts::Node &node) {
+    ts::Cursor cursor = node.getCursor();
+    if (cursor.gotoFirstChild()) {
+        do {
+            ts::Node expressionKid = cursor.getCurrentNode();    
+            std::cout << expressionKid.getType() << " " << expressionKid.getSymbol() << std::endl << std::endl;
+            //TODO: handle "builtin" and "argument_list" nodes. the entire expression is already in a string form.
+            if (expressionKid.getSymbol() == 121) { //builtin
+
+            }
+            if (expressionKid.getSymbol() == 122) { //argument_list
+
+            }
+        } while (cursor.gotoNextSibling());
+    }
+    std::unique_ptr<StringNode> newStringNode = visitString(node);
+    std::cout << "loop expression: " << newStringNode->value << std::endl;
+    return std::make_unique<ExpressionNode>(std::move(newStringNode));
 }
 
 int main(int argc, char *argv[]) {
