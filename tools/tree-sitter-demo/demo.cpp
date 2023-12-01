@@ -167,6 +167,13 @@ void Visitor::ForLoopNode::accept(Visitor &visitor) const {
     visitor.visit(*this);
 }
 
+Visitor::IdentifierNode::IdentifierNode(std::unique_ptr<StringNode> sn) 
+    : identifierValue(std::move(sn)) {}
+
+void Visitor::IdentifierNode::accept(Visitor &visitor) const {
+    visitor.visit(*this);
+}
+
 Visitor::Parser::Parser(const ts::Language &language, const std::string &source) :
     language{language}, source{source}, visitMap{
         { 90, (Command)&Parser::visitGame }
@@ -370,11 +377,11 @@ void processForLoop(const ts::Node &forLoopNode) {
         ts::Node forLoopKid = forLoopCursor.getCurrentNode();
         std::cout << forLoopKid.getType() << " " << forLoopKid.getSymbol() << std::endl << std::endl;
         
-        // if (child.getSymbol() == 85) { // for loop "identifier"
-        
+        // if (forLoopKid.getSymbol() == 85) { // for loop "identifier"
+        //     processIdentifier(forLoopKid);
         // }
         
-        // if (child.getSymbol() == 120) { //expression
+        // if (forLoopKid.getSymbol() == 120) { //expression
         
         // }
         
@@ -403,7 +410,10 @@ Visitor::Parser::visitRulesBody(const ts::Node &node) {
                 gameRules.push_back(child);
                 ts::Node ruleTypeNode = child.getChild(0);
                 if (ruleTypeNode.getSymbol() == 100) {
+                    ts::Node identifierNode = ruleTypeNode.getChild(1);
+                    std::cout << identifierNode.getSymbol() << std::endl;
                     processForLoop(ruleTypeNode);
+                    visitIdentifier(identifierNode);
                 }
             }
         } while (cursor.gotoNextSibling());
@@ -493,6 +503,12 @@ Visitor::Parser::visitRange(const ts::Node &node) {
     std::string first = std::string(node.getChild(1).getSourceRange(source));
     std::string second = std::string(node.getChild(3).getSourceRange(source));
     return std::make_unique<RangeNode>(std::pair<int, int>(std::stoi(first), std::stoi(second)));
+}
+
+std::unique_ptr<Visitor::IdentifierNode> 
+Visitor::Parser::visitIdentifier(const ts::Node &node) {
+    std::unique_ptr<StringNode> newStringNode = visitString(node);
+    return std::make_unique<IdentifierNode>(std::move(newStringNode));
 }
 
 int main(int argc, char *argv[]) {
