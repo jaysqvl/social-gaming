@@ -38,6 +38,8 @@ namespace Visitor {
     struct BooleanNode;
     struct RangeNode;
 
+    struct IdentifierNode;
+
     struct GameNode : public Node {
         std::unique_ptr<ConfigurationNode> configuration;
         std::unique_ptr<ConstantsNode> constants;
@@ -187,6 +189,13 @@ namespace Visitor {
         void accept(Visitor &visitor) const override;
     };
 
+    struct IdentifierNode : public Node {
+        std::unique_ptr<StringNode> identifierValue;
+
+        IdentifierNode(std::unique_ptr<StringNode> sn);
+        void accept(Visitor &visitor) const override;
+    };
+
     struct Visitor {
         virtual void visit(const Node &node) = 0;
         virtual void visit(const GameNode &node) = 0;
@@ -204,6 +213,7 @@ namespace Visitor {
         virtual void visit(const BooleanNode &node) = 0;
         virtual void visit(const RangeNode &node) = 0;
         virtual void visit(const ForLoopNode &node) = 0;
+        virtual void visit(const IdentifierNode &node) = 0;
     };
 
     struct Printer : public Visitor {
@@ -319,6 +329,11 @@ namespace Visitor {
             std::cout << "For LOOP NODE THING BABY" << std::endl;
         }
 
+        void visit(const IdentifierNode &node) override {
+            printDepth();
+            std::cout << "identifier for a loop: " << node.identifierValue->value << std::endl;
+        }
+
         size_t depth = 0;
         void printDepth(void) {
             for (size_t i = 0; i < depth; i++) {
@@ -354,5 +369,6 @@ namespace Visitor {
         std::unique_ptr<StringNode> visitString(const ts::Node &);
         std::unique_ptr<BooleanNode> visitBoolean(const ts::Node &);
         std::unique_ptr<RangeNode> visitRange(const ts::Node &);
+        std::unique_ptr<IdentifierNode> visitIdentifier(const ts::Node &);
     };
 };
