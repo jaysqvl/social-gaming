@@ -173,6 +173,13 @@ void Visitor::IdentifierNode::accept(Visitor &visitor) const {
     visitor.visit(*this);
 }
 
+Visitor::MessageNode::MessageNode(std::unique_ptr<StringNode> messageContent, std::unique_ptr<StringNode> recipients) 
+    : messageContent(std::move(messageContent)), recipients(std::move(recipients)) {}
+
+void Visitor::MessageNode::accept(Visitor &visitor) const {
+    visitor.visit(*this);
+}
+
 Visitor::ExpressionNode::ExpressionNode(std::unique_ptr<StringNode> sn) 
     : expressionValue(std::move(sn)) {}
 
@@ -292,7 +299,8 @@ std::unique_ptr<Visitor::RulesSetNode>
 Visitor::Parser::visitRules(const ts::Node &node) {
     std::unique_ptr<BodyNode> rulesNode = 
         visitRulesBody(node.getChildByFieldName("body"));
-
+    
+    std::unique_ptr<MessageNode> messageNode = visitMessage(node);
     rulesNode->handleGameRuleNodes();
     //TODO: have constructor of rules node taking in the node of the body
     return std::make_unique<RulesSetNode>();
@@ -319,14 +327,42 @@ void processDiscard(const ts::Node &discardNode) {
 }
 
 //TODO: handle the player_set node (child idx 1) and qualified identifier (child idx 2) -amos
+// void processMessage(const ts::Node &messageNode) {
+//     ts::Cursor messageCursor = messageNode.getCursor();
+//     do {
+//         ts::Node messageKid = messageCursor.getCurrentNode();
+//         std::cout << "  " << messageKid.getChild(0).getType() << " " << messageKid.getChild(0).getSymbol() << std::endl << std::endl;
+//         std::cout << "  " << messageKid.getChild(1).getType() << " " << messageKid.getChild(1).getSymbol() << std::endl << std::endl;
+//         std::cout << "  " << messageKid.getChild(2).getType() << " " << messageKid.getChild(2).getSymbol() << std::endl << std::endl;
+//     } while (messageCursor.gotoNextSibling());
+// }
+
 void processMessage(const ts::Node &messageNode) {
     ts::Cursor messageCursor = messageNode.getCursor();
-    do {
-        ts::Node messageKid = messageCursor.getCurrentNode();
-        std::cout << "  " << messageKid.getChild(0).getType() << " " << messageKid.getChild(0).getSymbol() << std::endl << std::endl;
-        std::cout << "  " << messageKid.getChild(1).getType() << " " << messageKid.getChild(1).getSymbol() << std::endl << std::endl;
-        std::cout << "  " << messageKid.getChild(2).getType() << " " << messageKid.getChild(2).getSymbol() << std::endl << std::endl;
-    } while (messageCursor.gotoNextSibling());
+    std::unique_ptr<Visitor::StringNode> messageContentNode;
+
+    if (messageCursor.gotoFirstChild()) {
+        do {
+            ts::Node messageKid = messageCursor.getCurrentNode();
+            std::cout << "  " << messageKid.getType() << " " << messageKid.getSymbol() << std::endl << std::endl;
+            
+            //process message identifier
+            if(messageKid.getSymbol() == 118) {
+
+            }
+            
+            //players to message
+            else if(messageKid.getSymbol() == 130) {
+                
+            }
+            
+            //the actual message
+            else if(messageKid.getSymbol() == 120){
+
+            }
+
+        } while (messageCursor.gotoNextSibling());
+    }
 }
 
 //TODO: handle parallel for (if needed - child idx 0), identifier (child idx 1), expression (3) and body (4) - jay
@@ -450,6 +486,10 @@ Visitor::Parser::visitRulesBody(const ts::Node &node) {
                     visitIdentifier(identifierNode);
                     visitExpression(expressionNode);
                 }
+
+                else if(ruleTypeNode.getSymbol() == 118) {
+                    std::cout << ruleTypeNode.getType() << "poop " << ruleTypeNode.getSymbol() << std::endl;
+                }
             }
         } while (cursor.gotoNextSibling());
     }
@@ -545,6 +585,38 @@ Visitor::Parser::visitIdentifier(const ts::Node &node) {
     std::unique_ptr<StringNode> newStringNode = visitString(node);
     std::cout << "loop identifier: " << newStringNode->value << std::endl;
     return std::make_unique<IdentifierNode>(std::move(newStringNode));
+}
+
+std::unique_ptr<Visitor::MessageNode> 
+Visitor::Parser::visitMessage(const ts::Node &node) {
+    ts::Node messageContent = node;
+    ts::Node recipients = node;
+    ts::Cursor cursor = node.getCursor();
+
+    if (cursor.gotoFirstChild()) {
+        do {
+            ts::Node child = cursor.getCurrentNode();    
+            std::cout << child.getType() << "asd " << child.getSymbol() << std::endl << std::endl;
+
+            if(child.getSymbol() == 118) {
+                std::cout << "msg found" << std::endl;
+                messageContent = child;
+            }
+
+            else if(child.getSymbol() == 130) {
+                std::cout << "player set found" << std::endl;
+                recipients = child;
+            }
+        } while (cursor.gotoNextSibling());
+    }
+
+    std::unique_ptr<StringNode> messageContentNode = visitString(messageContent);
+    std::cout << "message content: " << messageContentNode->value << std::endl;
+
+    std::unique_ptr<StringNode> recipientsNode = visitString(recipients);
+    std::cout << "recipients: " << recipientsNode->value << std::endl;
+
+    return std::make_unique<MessageNode>(std::move(messageContentNode), std::move(recipientsNode));
 }
 
 std::unique_ptr<Visitor::ExpressionNode> 
