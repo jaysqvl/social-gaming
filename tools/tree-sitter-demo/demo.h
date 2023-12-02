@@ -43,6 +43,8 @@ namespace Visitor {
     struct IdentifierNode;
     struct ExpressionNode;
 
+    struct MessageNode;
+
     struct GameNode : public Node {
         std::unique_ptr<ConfigurationNode> configuration;
         std::unique_ptr<ConstantsNode> constants;
@@ -120,7 +122,9 @@ namespace Visitor {
 
         //we might want this as a different return type later or in 
         //a different spot; leaving it as void for now
+        // void handleGameRuleNodes();
         void handleGameRuleNodes();
+
     };
 
     struct GameRuleNode : public Node {
@@ -206,6 +210,14 @@ namespace Visitor {
         void accept(Visitor &visitor) const override;
     };
 
+    struct MessageNode : public Node {
+        std::unique_ptr<StringNode> recipients;
+        std::unique_ptr<StringNode> messageContent;
+
+        MessageNode(std::unique_ptr<StringNode> messageContent, std::unique_ptr<StringNode> recipients);
+        void accept(Visitor &visitor) const override;
+    };
+
     struct Visitor {
         virtual void visit(const Node &node) = 0;
         virtual void visit(const GameNode &node) = 0;
@@ -225,6 +237,7 @@ namespace Visitor {
         virtual void visit(const ForLoopNode &node) = 0;
         virtual void visit(const IdentifierNode &node) = 0;
         virtual void visit(const ExpressionNode &node) = 0;
+        virtual void visit(const MessageNode &node) = 0;
     };
 
     struct Printer : public Visitor {
@@ -350,6 +363,11 @@ namespace Visitor {
             std::cout << "expression for a loop:" << node.expressionValue->value << std::endl;
         }
 
+        void visit(const MessageNode &node) override {
+            printDepth();
+            std::cout << "expression for a loop:" << node.messageContent->value << std::endl;
+        }
+
         size_t depth = 0;
         void printDepth(void) {
             for (size_t i = 0; i < depth; i++) {
@@ -387,5 +405,7 @@ namespace Visitor {
         std::unique_ptr<RangeNode> visitRange(const ts::Node &);
         std::unique_ptr<IdentifierNode> visitIdentifier(const ts::Node &);
         std::unique_ptr<ExpressionNode> visitExpression(const ts::Node &);
+        std::unique_ptr<MessageNode> visitMessage(const ts::Node &);
+
     };
 };
