@@ -1,6 +1,7 @@
 #include <cpp-tree-sitter.h>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <string>
 #include <map>
 #include <vector>
@@ -406,6 +407,7 @@ namespace Visitor {
         std::unique_ptr<IdentifierNode> visitIdentifier(const ts::Node &);
         std::unique_ptr<ExpressionNode> visitExpression(const ts::Node &);
         std::unique_ptr<MessageNode> visitMessage(const ts::Node &);
+        std::unique_ptr<StringNode> findMessageNode(const ts::Node &);
 
     };
 };
