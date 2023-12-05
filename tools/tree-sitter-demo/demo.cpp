@@ -416,8 +416,16 @@ void processMatchEntry(const ts::Node &matchEntryNode) {
 }
 
 void processScore(const ts::Node &scoreNode) {
-    //TODO: make a func to process scores - david
-    // stub
+    ts::Cursor extendCursor = extendNode.getCursor();
+    if (extendCursor.gotoFirstChild()) {
+        do {
+            ts::Node extendKid = extendCursor.getCurrentNode();
+            std::cout << "  " << extendKid.getType() << " " << extendKid.getSymbol() << std::endl << std::endl;
+            if (extendKid.getSymbol() == 126) { // List literals
+                // TODO: Handle 'keys' which is of type list_literal
+            }
+        } while (extendCursor.gotoNextSibling());
+    }
 }
 
 void processExtend(const ts::Node &extendNode) {
@@ -773,7 +781,7 @@ Visitor::Parser::visitMessage(const ts::Node &node) {
     }
 
     return std::make_unique<MessageNode>(std::move(messageContentNode), std::move(recipentsNode));
-}
+}`
 
 std::unique_ptr<Visitor::ExpressionNode> 
 Visitor::Parser::visitExpression(const ts::Node &node) {
