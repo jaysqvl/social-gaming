@@ -91,16 +91,16 @@ void Visitor::BodyNode::handleGameRuleNodes() {
         size_t nodeSymbolNumber = node.getSymbol();
         switch (nodeSymbolNumber) {
             case 100:
-                //TODO: create a ForLoopNode? or just some way of putting the data into something manageable
+                // Todo: create a ForLoopNode? or just some way of putting the data into something manageable
                 break;
             case 111:
-                //Todo: DiscardNode
+                // Todo: DiscardNode
                 break;
             case 118:
-                //todo: Message handling/visitation
+                // Todo: Message handling/visitation
                 break;
             case 102:
-                //todo: parallel for
+                // Todo: parallel for
                 break;
         }
     }
@@ -349,19 +349,10 @@ void processMessage(const ts::Node &messageNode) {
         do {
             ts::Node messageKid = messageCursor.getCurrentNode();
             std::cout << "  " << messageKid.getType() << " " << messageKid.getSymbol() << std::endl << std::endl;
-            
-            //process message identifier
-            if(messageKid.getSymbol() == 118) { // Sym message
 
-            }
-            
-            //players to message
-            else if(messageKid.getSymbol() == 130) { // Sym player set
+            if (messageKid.getSymbol() == 130) { // Sym player set
                 
-            }
-            
-            //the actual message
-            else if(messageKid.getSymbol() == 120){ // Sym expression
+            } else if (messageKid.getSymbol() == 120){ // Sym expression
 
             }
 
@@ -416,15 +407,15 @@ void processMatchEntry(const ts::Node &matchEntryNode) {
 }
 
 void processScore(const ts::Node &scoreNode) {
-    ts::Cursor extendCursor = extendNode.getCursor();
-    if (extendCursor.gotoFirstChild()) {
+    ts::Cursor scoreCursor = scoreNode.getCursor();
+    if (scoreCursor.gotoFirstChild()) {
         do {
-            ts::Node extendKid = extendCursor.getCurrentNode();
-            std::cout << "  " << extendKid.getType() << " " << extendKid.getSymbol() << std::endl << std::endl;
-            if (extendKid.getSymbol() == 126) { // List literals
+            ts::Node scoreKid = scoreCursor.getCurrentNode();
+            std::cout << "  " << scoreKid.getType() << " " << scoreKid.getSymbol() << std::endl << std::endl;
+            if (scoreKid.getSymbol() == 126) { // List literals
                 // TODO: Handle 'keys' which is of type list_literal
             }
-        } while (extendCursor.gotoNextSibling());
+        } while (scoreCursor.gotoNextSibling());
     }
 }
 
@@ -502,7 +493,7 @@ void processTimer(const ts::Node &timerNode) {
             if (timerKid.getSymbol() == 120) { // expression
                 // TODO: Handle qualified identifier
             } else if (timerKid.getSymbol() == 131) { // sym body
-                // TODO: Handle expression
+                processRulesBody(timerKid);
             } else {    // START OPTIONAL KIDS:
                 if (timerKid.getSymbol() == 114) { // OPTIONAL: Choice field
                     // TODO: HANDLE 'at most' and 'exactly' choices (see grammar.js line 235)
@@ -781,7 +772,7 @@ Visitor::Parser::visitMessage(const ts::Node &node) {
     }
 
     return std::make_unique<MessageNode>(std::move(messageContentNode), std::move(recipentsNode));
-}`
+}
 
 std::unique_ptr<Visitor::ExpressionNode> 
 Visitor::Parser::visitExpression(const ts::Node &node) {
