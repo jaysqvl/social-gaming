@@ -533,33 +533,50 @@ void processShuffle(const ts::Node &shuffleNode) {
 
 void processRuleBodyType(const ts::Node &ruleBodyNode) {
     ts::Node rulesType = ruleBodyNode.getChild(0);
+    auto rulesTypeSymbol = rulesType.getSymbol();
 
-    if (rulesType.getSymbol() == 111) { // Discard
-        processDiscard(rulesType);
-    } else if (rulesType.getSymbol() == 118) { // Message
-        processMessage(rulesType);
-    } else if (rulesType.getSymbol() == 102) { // Parallel For
-        processParallelFor(rulesType);
-    } else if (rulesType.getSymbol() == 100) { // Regular For
-        processForLoop(rulesType);
-    } else if (rulesType.getSymbol() == 119) { // Scores
-        processScore(rulesType);
-    } else if (rulesType.getSymbol() == 104) { // Match
-        processMatch(rulesType);
-    } else if (rulesType.getSymbol() == 106) { // Extend
-        processExtend(rulesType);
-    } else if (rulesType.getSymbol() == 112) { // Assignment
-        processAssignment(rulesType);
-    } else if (rulesType.getSymbol() == 109) { // Sort
-        processSort(rulesType);
-    } else if (rulesType.getSymbol() == 110) { // Deal
-        processDeal(rulesType);
-    } else if (rulesType.getSymbol() == 113) { // Timer
-        processTimer(rulesType);
-    } else if (rulesType.getSymbol() == 107) { // Reverse
-        processReverse(rulesType);
-    } else if (rulesType.getSymbol() == 108) { // Shuffle
-        processShuffle(rulesType);
+    switch (rulesTypeSymbol) {
+        case 111:
+            processDiscard(rulesType);
+            break;
+        case 118:
+            processMessage(rulesType);
+            break;
+        case 102:
+            processParallelFor(rulesType);
+            break;
+        case 100:
+            processForLoop(rulesType);
+            break;
+        case 119:
+            processScore(rulesType);
+            break;
+        case 104:
+            processMatch(rulesType);
+            break;
+        case 106:
+            processExtend(rulesType);
+            break;
+        case 112:
+            processAssignment(rulesType);
+            break;
+        case 109:
+            processSort(rulesType);
+            break;
+        case 110:
+            processDeal(rulesType);
+            break;
+        case 113:
+            processTimer(rulesType);
+            break;
+        case 107:
+            processReverse(rulesType);
+            break;
+        case 108:
+            processShuffle(rulesType);
+            break;
+        default:
+            break;
     }
 }
 
@@ -682,8 +699,6 @@ Visitor::Parser::visitValueMap(const ts::Node &node) {
                 // }
             }
         } while (cursor.gotoNextSibling());
-
-       
     }
     return std::make_unique<ValueMapNode>(std::move(values));
 }
