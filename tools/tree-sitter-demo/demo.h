@@ -45,6 +45,7 @@ namespace Visitor {
     struct ExpressionNode;
 
     struct MessageNode;
+    struct DiscardNode;
 
     struct GameNode : public Node {
         std::unique_ptr<ConfigurationNode> configuration;
@@ -112,6 +113,7 @@ namespace Visitor {
     struct RulesSetNode : public Node {
         std::unique_ptr<BodyNode> body;
         RulesSetNode();
+        RulesSetNode(std::unique_ptr<BodyNode> bodyNode);
         void accept(Visitor &visitor) const override;
     };
 
@@ -219,6 +221,14 @@ namespace Visitor {
         void accept(Visitor &visitor) const override;
     };
 
+    struct DiscardNode : public Node {
+        std::unique_ptr<StringNode> target;
+        std::unique_ptr<StringNode> discardContent;
+
+        DiscardNode(std::unique_ptr<StringNode> discardContent, std::unique_ptr<StringNode> target);
+        void accept(Visitor &visitor) const override;
+    };
+
     struct Visitor {
         virtual void visit(const Node &node) = 0;
         virtual void visit(const GameNode &node) = 0;
@@ -239,6 +249,7 @@ namespace Visitor {
         virtual void visit(const IdentifierNode &node) = 0;
         virtual void visit(const ExpressionNode &node) = 0;
         virtual void visit(const MessageNode &node) = 0;
+        virtual void visit(const DiscardNode &node) = 0;
     };
 
     struct Printer : public Visitor {
@@ -366,7 +377,12 @@ namespace Visitor {
 
         void visit(const MessageNode &node) override {
             printDepth();
-            std::cout << "expression for a loop:" << node.messageContent->value << std::endl;
+            std::cout << "expression for message:" << node.messageContent->value << std::endl;
+        }
+
+        void visit(const DiscardNode &node) override {
+            printDepth();
+            std::cout << "expression for discard:" << node.discardContent->value << std::endl;
         }
 
         size_t depth = 0;
@@ -407,7 +423,8 @@ namespace Visitor {
         std::unique_ptr<IdentifierNode> visitIdentifier(const ts::Node &);
         std::unique_ptr<ExpressionNode> visitExpression(const ts::Node &);
         std::unique_ptr<MessageNode> visitMessage(const ts::Node &);
-        std::unique_ptr<StringNode> findMessageNode(const ts::Node &);
+        std::unique_ptr<StringNode> findNode(const ts::Node &, std::string keyword);
+        std::unique_ptr<DiscardNode> visitDiscard(const ts::Node &);
 
     };
 };
