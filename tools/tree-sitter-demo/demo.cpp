@@ -253,7 +253,7 @@ Visitor::Parser::visitConfiguration(const ts::Node &node) {
             std::move(name),
             std::move(hasAudience),
             std::move(playerRange));
-// how to: handle unnamed children
+    // how to: handle unnamed children
     ts::Cursor cursor = node.getCursor();
     if (cursor.gotoFirstChild()) {
         do {
@@ -351,17 +351,17 @@ void processMessage(const ts::Node &messageNode) {
             std::cout << "  " << messageKid.getType() << " " << messageKid.getSymbol() << std::endl << std::endl;
             
             //process message identifier
-            if(messageKid.getSymbol() == 118) {
+            if(messageKid.getSymbol() == 118) { // Sym message
 
             }
             
             //players to message
-            else if(messageKid.getSymbol() == 130) {
+            else if(messageKid.getSymbol() == 130) { // Sym player set
                 
             }
             
             //the actual message
-            else if(messageKid.getSymbol() == 120){
+            else if(messageKid.getSymbol() == 120){ // Sym expression
 
             }
 
@@ -396,6 +396,7 @@ void processMatch(const ts::Node &matchNode) {
         } while (matchCursor.gotoNextSibling());
     }
 }
+
  //helper function of the helper to get all the match entries
 void processMatchEntry(const ts::Node &matchEntryNode) {
     ts::Cursor matchEntryCursor = matchEntryNode.getCursor();
@@ -414,6 +415,123 @@ void processMatchEntry(const ts::Node &matchEntryNode) {
     }
 }
 
+void processScore(const ts::Node &scoreNode) {
+    //TODO: make a func to process scores - david
+    // stub
+}
+
+void processExtend(const ts::Node &extendNode) {
+    ts::Cursor extendCursor = extendNode.getCursor();
+    if (extendCursor.gotoFirstChild()) {
+        do {
+            ts::Node extendKid = extendCursor.getCurrentNode();
+            std::cout << "  " << extendKid.getType() << " " << extendKid.getSymbol() << std::endl << std::endl;
+            if (extendKid.getSymbol() == 129) { // qualified identifier
+                // TODO: Handle qualified identifier
+            } else if (extendKid.getSymbol() == 120) { // expression
+                // TODO: Handle expression
+            }
+        } while (extendCursor.gotoNextSibling());
+    }
+}
+
+void processAssignment(const ts::Node &assignmentNode) {
+    // stub
+    ts::Cursor assignmentCursor = assignmentNode.getCursor();
+    if (assignmentCursor.gotoFirstChild()) {
+        do {
+            ts::Node assignmentKid = assignmentCursor.getCurrentNode();
+            std::cout << "  " << assignmentKid.getType() << " " << assignmentKid.getSymbol() << std::endl << std::endl;
+            if (assignmentKid.getSymbol() == 129) { // qualified identifier
+                // TODO: Handle qualified identifier
+            } else if (assignmentKid.getSymbol() == 120) { // expression
+                // TODO: Handle expression
+            }
+        } while (assignmentCursor.gotoNextSibling());
+    }
+}
+
+void processSort(const ts::Node &sortNode) {
+    ts::Cursor sortCursor = sortNode.getCursor();
+    if (sortCursor.gotoFirstChild()) {
+        do {
+            ts::Node sortKid = sortCursor.getCurrentNode();
+            std::cout << "  " << sortKid.getType() << " " << sortKid.getSymbol() << std::endl << std::endl;
+            if (sortKid.getSymbol() == 129) { // qualified identifier
+                // TODO: Handle qualified identifier
+            } else {
+                if (sortKid.getSymbol() == 120) { // OPTIONAL: Expression
+                    // TODO: Handle expression
+                }
+            }
+        } while (sortCursor.gotoNextSibling());
+    }
+}
+
+void processDeal(const ts::Node &dealNode) {
+    ts::Cursor dealCursor = dealNode.getCursor();
+    if (dealCursor.gotoFirstChild()) {
+        do {
+            ts::Node dealKid = dealCursor.getCurrentNode();
+            std::cout << "  " << dealKid.getType() << " " << dealKid.getSymbol() << std::endl << std::endl;
+            if (dealKid.getSymbol() == 129) { // qualified identifier
+                // TODO: Handle qualified identifier
+            } else if (dealKid.getSymbol() == 130) { // player_set
+                // TODO: Player Set
+            } else if (dealKid.getSymbol() == 120) {
+                // TODO: Handle expression
+            }
+        } while (dealCursor.gotoNextSibling());
+    }
+}
+
+void processTimer(const ts::Node &timerNode) {
+    ts::Cursor timerCursor = timerNode.getCursor();
+    if (timerCursor.gotoFirstChild()) {
+        do {
+            ts::Node timerKid = timerCursor.getCurrentNode();
+            std::cout << "  " << timerKid.getType() << " " << timerKid.getSymbol() << std::endl << std::endl;
+            if (timerKid.getSymbol() == 120) { // expression
+                // TODO: Handle qualified identifier
+            } else if (timerKid.getSymbol() == 131) { // sym body
+                // TODO: Handle expression
+            } else {    // START OPTIONAL KIDS:
+                if (timerKid.getSymbol() == 114) { // OPTIONAL: Choice field
+                    // TODO: HANDLE 'at most' and 'exactly' choices (see grammar.js line 235)
+                } else if (timerKid.getSymbol() == 129) { // OPTIONAL: Qualified identifier
+                    
+                }
+            }
+        } while (timerCursor.gotoNextSibling());
+    }
+}
+
+void processReverse(const ts::Node &reverseNode) {
+    ts::Cursor reverseCursor = reverseNode.getCursor();
+    if (reverseCursor.gotoFirstChild()) {
+        do {
+            ts::Node reverseKid = reverseCursor.getCurrentNode();
+            std::cout << "  " << reverseKid.getType() << " " << reverseKid.getSymbol() << std::endl << std::endl;
+            if (reverseKid.getSymbol() == 129) { // qualified identifier
+                // TODO: Handle qualified identifier
+            }
+        } while (reverseCursor.gotoNextSibling());
+    }
+}
+
+void processShuffle(const ts::Node &shuffleNode) {
+    ts::Cursor shuffleCursor = shuffleNode.getCursor();
+    if (shuffleCursor.gotoFirstChild()) {
+        do {
+            ts::Node shuffleKid = shuffleCursor.getCurrentNode();
+            std::cout << "  " << shuffleKid.getType() << " " << shuffleKid.getSymbol() << std::endl << std::endl;
+            if (shuffleKid.getSymbol() == 129) { // qualified identifier
+                // TODO: Handle qualified identifier
+            }
+        } while (shuffleCursor.gotoNextSibling());
+    }
+}
+
 void processRuleBodyType(const ts::Node &ruleBodyNode) {
     ts::Node rulesType = ruleBodyNode.getChild(0);
 
@@ -426,13 +544,23 @@ void processRuleBodyType(const ts::Node &ruleBodyNode) {
     } else if (rulesType.getSymbol() == 100) { // Regular For
         processForLoop(rulesType);
     } else if (rulesType.getSymbol() == 119) { // Scores
-        //TODO: make a func to process scores - david
+        processScore(rulesType);
     } else if (rulesType.getSymbol() == 104) { // Match
         processMatch(rulesType);
     } else if (rulesType.getSymbol() == 106) { // Extend
-        //TODO
+        processExtend(rulesType);
     } else if (rulesType.getSymbol() == 112) { // Assignment
-        //TODO
+        processAssignment(rulesType);
+    } else if (rulesType.getSymbol() == 109) { // Sort
+        processSort(rulesType);
+    } else if (rulesType.getSymbol() == 110) { // Deal
+        processDeal(rulesType);
+    } else if (rulesType.getSymbol() == 113) { // Timer
+        processTimer(rulesType);
+    } else if (rulesType.getSymbol() == 107) { // Reverse
+        processReverse(rulesType);
+    } else if (rulesType.getSymbol() == 108) { // Shuffle
+        processShuffle(rulesType);
     }
 }
 
@@ -490,10 +618,6 @@ Visitor::Parser::visitRulesBody(const ts::Node &node) {
                     visitIdentifier(identifierNode);
                     visitExpression(expressionNode);
                 }
-
-                // else if(ruleTypeNode.getSymbol() == 118) {
-                //     std::cout << ruleTypeNode.getType() << "found message " << ruleTypeNode.getSymbol() << std::endl;
-                // }
             }
         } while (cursor.gotoNextSibling());
     }
