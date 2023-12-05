@@ -73,6 +73,9 @@ void Visitor::PerAudienceNode::accept(Visitor &visitor) const {
 
 Visitor::RulesSetNode::RulesSetNode() {}
 
+Visitor::RulesSetNode::RulesSetNode(std::unique_ptr<BodyNode> bodyNode) 
+    : body(std::move(bodyNode)) {}
+
 void Visitor::RulesSetNode::accept(Visitor &visitor) const {
     visitor.visit(*this);
 }
@@ -177,6 +180,13 @@ Visitor::MessageNode::MessageNode(std::unique_ptr<StringNode> messageContent, st
     : messageContent(std::move(messageContent)), recipients(std::move(recipients)) {}
 
 void Visitor::MessageNode::accept(Visitor &visitor) const {
+    visitor.visit(*this);
+}
+
+Visitor::DiscardNode::DiscardNode(std::unique_ptr<StringNode> discardContent, std::unique_ptr<StringNode> target) 
+    : discardContent(std::move(discardContent)), target(std::move(target)) {}
+
+void Visitor::DiscardNode::accept(Visitor &visitor) const {
     visitor.visit(*this);
 }
 
@@ -297,7 +307,7 @@ Visitor::Parser::visitPerAudience(const ts::Node &node) {
 //Might not be necessary
 std::unique_ptr<Visitor::RulesSetNode>
 Visitor::Parser::visitRules(const ts::Node &node) {
-    std::unique_ptr<BodyNode> rulesNode = 
+    std::unique_ptr<BodyNode> rulesBodyNode = 
         visitRulesBody(node.getChildByFieldName("body"));
     
     std::unique_ptr<MessageNode> messageNode = visitMessage(node);
@@ -305,9 +315,15 @@ Visitor::Parser::visitRules(const ts::Node &node) {
     std::cout << "Message recipient: " << messageNode->recipients->value << "\n";
     std::cout << "Message: " << messageNode->messageContent->value << "\n";
 
-    rulesNode->handleGameRuleNodes();
-    //TODO: have constructor of rules node taking in the node of the body
-    return std::make_unique<RulesSetNode>();
+    std::unique_ptr<DiscardNode> discardNode = visitDiscard(node);
+    std::cout << "Discard target: " << discardNode->target->value << "\n";
+    std::cout << "Discarding: " << discardNode->discardContent->value << "\n";
+
+    rulesBodyNode->handleGameRuleNodes();
+    //TODO: have constructor of rules node taking in the node of the body -- Complete
+    //Todo - Store and use the message and discard nodes in some way
+    std::unique_ptr<RulesSetNode> ruleSetNode =  std::make_unique<RulesSetNode>(std::move(rulesBodyNode));
+    return ruleSetNode;
 }
 
 // Helper Functions for visitRulesBody
@@ -731,7 +747,7 @@ Visitor::Parser::visitIdentifier(const ts::Node &node) {
 
 // recursively traverse through the rule tree to find message statements
 std::unique_ptr<Visitor::StringNode> 
-Visitor::Parser::findMessageNode(const ts::Node &node) {
+Visitor::Parser::findNode(const ts::Node &node, std::string keyword) {
     for(int i = 0; i < node.getNumChildren(); i++) {
         std::string currWord = std::string(node.getChild(i).getSourceRange(source));
 
@@ -740,14 +756,14 @@ Visitor::Parser::findMessageNode(const ts::Node &node) {
             std::string firstWord;
             std::istringstream(currWord) >> firstWord;
 
-            if(firstWord == "message") {
+            if(firstWord == keyword) {
                 // std::cout << "found message! " << currWord << '\n';
                 std::unique_ptr<StringNode> stringNode = std::make_unique<StringNode>(std::move(std::string(currWord)));
                 return stringNode;
             }
         }
 
-        auto result = findMessageNode(node.getChild(i));
+        auto result = findNode(node.getChild(i), keyword);
         if(result) {
             return result;
         }
@@ -761,21 +777,23 @@ Visitor::Parser::visitMessage(const ts::Node &node) {
     std::unique_ptr<StringNode> recipentsNode;
     ts::Cursor cursor = node.getCursor();
 
-    // std::unique_ptr<StringNode> messageContentNode = visitString(messageContent.getChild(1).getChild(1).getChild(0).getChild(4).getChild(2));
-    // std::cout << "num child " << messageContent.getChild(1).getChild(1).getChild(0).getChild(4).getChild(2).getNumChildren() << std::endl;
-    // std::cout << "type " << messageContent.getChild(1).getChild(1).getChild(0).getChild(4).getChild(2).getType() << std::endl;
-
-    std::unique_ptr<StringNode> messageNode = findMessageNode(node);
-    if(messageNode) {
-        // std::cout << "content: " << messageNode->value << std::endl;
+    std::unique_ptr<StringNode> messageNode = findNode(node, "message");
+    if (messageNode) {
         size_t messagePos = messageNode->value.find("message");
 
-        messagePos+= 7; // length of "message"
+        messagePos += 7; // length of "message"
         size_t start = messageNode->value.find_first_not_of(" ", messagePos);
         size_t end = messageNode->value.find(' ', start);
 
-        std::string recipents = messageNode->value.substr(start, end - start);
-        recipentsNode = std::make_unique<StringNode>(std::move(std::string(recipents)));
+        if (start != std::string::npos && end != std::string::npos) {
+            std::string recipents = messageNode->value.substr(start, end - start);
+            recipentsNode = std::make_unique<StringNode>(std::move(std::string(recipents)));
+        } 
+        
+        else {
+            std::cerr << "Error: recipients not found in message node." << std::endl;
+            return nullptr;
+        }
 
         size_t quoteStart = messageNode->value.find("\"");
         size_t quoteEnd = messageNode->value.find("\"", quoteStart + 1);
@@ -783,10 +801,69 @@ Visitor::Parser::visitMessage(const ts::Node &node) {
         if (quoteStart != std::string::npos && quoteEnd != std::string::npos) {
             std::string msg = messageNode->value.substr(quoteStart + 1, quoteEnd - quoteStart - 1);
             messageContentNode = std::make_unique<StringNode>(std::move(std::string(msg)));
+        } 
+        
+        else {
+            std::cerr << "Error: message content not found in message node." << std::endl;
+            return nullptr;
         }
+
+        return std::make_unique<MessageNode>(std::move(messageContentNode), std::move(recipentsNode));
     }
 
-    return std::make_unique<MessageNode>(std::move(messageContentNode), std::move(recipentsNode));
+    std::cerr << "Error: Message node not found." << std::endl;
+    return nullptr;
+}
+
+
+std::unique_ptr<Visitor::DiscardNode> 
+Visitor::Parser::visitDiscard(const ts::Node &node) {
+    std::unique_ptr<StringNode> discardContentNode;
+    std::unique_ptr<StringNode> discardTargetNode;
+    ts::Cursor cursor = node.getCursor();
+
+    std::unique_ptr<StringNode> discardNode = findNode(node, "discard");
+
+    if(discardNode) {
+        // std::cout << "discard content: " << discardNode->value << std::endl;
+
+        size_t discardPos = discardNode->value.find("discard");
+
+        if (discardPos != std::string::npos) {
+            std::string afterDiscard = discardNode->value.substr(discardPos + 8);
+
+            std::istringstream iss(afterDiscard);
+            std::string discardContent;
+            iss >> discardContent;
+
+            discardContentNode = std::make_unique<StringNode>(std::move(std::string(discardContent)));
+
+        } else {
+            std::cout << "'Error: discard' not found in Discard node." << std::endl;
+            return nullptr;
+        }
+
+        size_t fromPos = discardNode->value.find("from");
+
+        if (fromPos != std::string::npos) {
+            std::string afterFrom = discardNode->value.substr(fromPos + 5);
+
+            std::istringstream iss(afterFrom);
+            std::string discardTarget;
+            iss >> discardTarget;
+
+            discardTargetNode = std::make_unique<StringNode>(std::move(std::string(discardTarget)));
+        } 
+
+        else {
+            std::cout << "Error: 'from' not found in Discard node." << std::endl;
+            return nullptr;
+        }
+
+        return std::make_unique<DiscardNode>(std::move(discardContentNode), std::move(discardTargetNode));
+    }
+    std::cerr << "Error: Discard node not found." << std::endl;
+    return nullptr;
 }
 
 std::unique_ptr<Visitor::ExpressionNode> 
