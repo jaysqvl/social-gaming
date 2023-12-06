@@ -326,6 +326,266 @@ Visitor::Parser::visitRules(const ts::Node &node) {
     return ruleSetNode;
 }
 
+//body is the field of rules; rule is child of body
+std::unique_ptr<Visitor::BodyNode>
+Visitor::Parser::visitRulesBody(const ts::Node &node) {
+    ts::Cursor cursor = node.getCursor();
+    std::vector<ts::Node> gameRules;
+    
+    if (cursor.gotoFirstChild()) {
+        do {
+            ts::Node child = cursor.getCurrentNode();
+            std::cout << child.getType() << " " << child.getSymbol() << std::endl;
+            // if a rule is found, add to the body by getting the child
+            if (child.getSymbol() == 99) {
+                std::cout << "rule found" << std::endl;
+                std::cout << child.getChild(0).getType() << " " << child.getChild(0).getSymbol() << std::endl;
+                gameRules.push_back(child);
+                ts::Node ruleTypeNode = child.getChild(0);
+                if (ruleTypeNode.getSymbol() == 100) {
+                    ts::Node identifierNode = ruleTypeNode.getChild(1);
+                    ts::Node expressionNode = ruleTypeNode.getChild(3);
+                    processForLoop(ruleTypeNode);
+                    visitIdentifier(identifierNode);
+                    visitExpression(expressionNode);
+                }
+            }
+        } while (cursor.gotoNextSibling());
+    }
+    std::cout << "nodes going into a body node:" << std::endl;
+    for (auto node : gameRules) {
+        std::cout << node.getType() << " " << node.getSymbol() << std::endl;
+    }
+    return std::make_unique<BodyNode>(gameRules);
+}
+
+std::unique_ptr<Visitor::GameRuleNode> 
+Visitor::Parser::visitGameRule(const ts::Node &node) {
+    //TODO: add more.
+    return std::make_unique<GameRuleNode>();
+}
+
+std::unique_ptr<Visitor::SetupRuleNode>
+Visitor::Parser::visitSetupRule(const ts::Node &node) {
+    // How to: handle field
+    std::unique_ptr<StringNode> kind =
+        visitString(node.getChildByFieldName("kind"));
+    std::unique_ptr<StringNode> prompt =
+        visitString(node.getChildByFieldName("prompt"));
+
+    // How-To: handle optional types
+    auto rangeChild = node.getChildByFieldName("range");
+    auto choicesChild = node.getChildByFieldName("choices");
+    auto defaultChild = node.getChildByFieldName("default");
+
+    std::unique_ptr<RangeNode> range = rangeChild.isNull() ? nullptr : visitRange(rangeChild);
+    auto choices = choicesChild.isNull() ? nullptr : visit(choicesChild);
+    auto defaultValue = defaultChild.isNull() ? nullptr : visit(defaultChild);
+
+    return std::make_unique<SetupRuleNode>(
+            std::move(kind),
+            std::move(prompt),
+            std::move(range),
+            std::move(choices),
+            std::move(defaultValue));
+}
+
+std::unique_ptr<Visitor::ValueMapNode>
+Visitor::Parser::visitValueMap(const ts::Node &node) {
+    ts::Cursor cursor = node.getCursor();
+    std::map<std::unique_ptr<StringNode>, std::unique_ptr<StringNode>> values;
+    if (cursor.gotoFirstChild()) {
+        do {
+            ts::Node child = cursor.getCurrentNode();
+            std::cout << child.getType() << child.getSymbol() << std::endl << std::endl;
+            if (child.getSymbol() == 127) {
+
+                const ts::Node key = child.getChildByFieldName("key");
+                std::unique_ptr<StringNode> identifier = visitString(key);
+
+                const ts::Node value = child.getChildByFieldName("value");
+                std::unique_ptr<StringNode> expression = visitString(value);
+
+                values.insert(std::make_pair(std::move(identifier), std::move(expression)));
+
+                // // temp loop used to print for debugging
+                // for(auto it = values.cbegin(); it != values.cend(); ++it) {
+                //     std::cout << it->second->value << "\n";
+                // }
+            }
+        } while (cursor.gotoNextSibling());
+    }
+    return std::make_unique<ValueMapNode>(std::move(values));
+}
+
+std::unique_ptr<Visitor::StringNode>
+Visitor::Parser::visitString(const ts::Node &node) {
+    std::string value = std::string(node.getSourceRange(source));
+    return std::make_unique<StringNode>(value);
+}
+
+std::unique_ptr<Visitor::BooleanNode>
+Visitor::Parser::visitBoolean(const ts::Node &node) {
+    std::string value = std::string(node.getSourceRange(source));
+    return std::make_unique<BooleanNode>(value == "true");
+}
+
+std::unique_ptr<Visitor::RangeNode>
+Visitor::Parser::visitRange(const ts::Node &node) {
+    std::string first = std::string(node.getChild(1).getSourceRange(source));
+    std::string second = std::string(node.getChild(3).getSourceRange(source));
+    return std::make_unique<RangeNode>(std::pair<int, int>(std::stoi(first), std::stoi(second)));
+}
+
+std::unique_ptr<Visitor::IdentifierNode> 
+Visitor::Parser::visitIdentifier(const ts::Node &node) {
+    std::unique_ptr<StringNode> newStringNode = visitString(node);
+    std::cout << "loop identifier: " << newStringNode->value << std::endl;
+    return std::make_unique<IdentifierNode>(std::move(newStringNode));
+}
+
+// recursively traverse through the rule tree to find message statements
+std::unique_ptr<Visitor::StringNode> 
+Visitor::Parser::findNode(const ts::Node &node, std::string keyword) {
+    for(int i = 0; i < node.getNumChildren(); i++) {
+        std::string currWord = std::string(node.getChild(i).getSourceRange(source));
+
+        // Check if currWord is not empty before extracting the first word
+        if (!currWord.empty()) {
+            std::string firstWord;
+            std::istringstream(currWord) >> firstWord;
+
+            if(firstWord == keyword) {
+                // std::cout << "found message! " << currWord << '\n';
+                std::unique_ptr<StringNode> stringNode = std::make_unique<StringNode>(std::move(std::string(currWord)));
+                return stringNode;
+            }
+        }
+
+        auto result = findNode(node.getChild(i), keyword);
+        if(result) {
+            return result;
+        }
+    }
+    return nullptr;
+}
+
+std::unique_ptr<Visitor::MessageNode> 
+Visitor::Parser::visitMessage(const ts::Node &node) {
+    std::unique_ptr<StringNode> messageContentNode;
+    std::unique_ptr<StringNode> recipentsNode;
+    ts::Cursor cursor = node.getCursor();
+
+    std::unique_ptr<StringNode> messageNode = findNode(node, "message");
+    if (messageNode) {
+        size_t messagePos = messageNode->value.find("message");
+
+        messagePos += 7; // length of "message"
+        size_t start = messageNode->value.find_first_not_of(" ", messagePos);
+        size_t end = messageNode->value.find(' ', start);
+
+        if (start != std::string::npos && end != std::string::npos) {
+            std::string recipents = messageNode->value.substr(start, end - start);
+            recipentsNode = std::make_unique<StringNode>(std::move(std::string(recipents)));
+        } 
+        
+        else {
+            std::cerr << "Error: recipients not found in message node." << std::endl;
+            return nullptr;
+        }
+
+        size_t quoteStart = messageNode->value.find("\"");
+        size_t quoteEnd = messageNode->value.find("\"", quoteStart + 1);
+
+        if (quoteStart != std::string::npos && quoteEnd != std::string::npos) {
+            std::string msg = messageNode->value.substr(quoteStart + 1, quoteEnd - quoteStart - 1);
+            messageContentNode = std::make_unique<StringNode>(std::move(std::string(msg)));
+        } 
+        
+        else {
+            std::cerr << "Error: message content not found in message node." << std::endl;
+            return nullptr;
+        }
+
+        return std::make_unique<MessageNode>(std::move(messageContentNode), std::move(recipentsNode));
+    }
+
+    std::cerr << "Error: Message node not found." << std::endl;
+    return nullptr;
+}
+
+
+std::unique_ptr<Visitor::DiscardNode> 
+Visitor::Parser::visitDiscard(const ts::Node &node) {
+    std::unique_ptr<StringNode> discardContentNode;
+    std::unique_ptr<StringNode> discardTargetNode;
+    ts::Cursor cursor = node.getCursor();
+
+    std::unique_ptr<StringNode> discardNode = findNode(node, "discard");
+
+    if(discardNode) {
+        // std::cout << "discard content: " << discardNode->value << std::endl;
+
+        size_t discardPos = discardNode->value.find("discard");
+
+        if (discardPos != std::string::npos) {
+            std::string afterDiscard = discardNode->value.substr(discardPos + 8);
+
+            std::istringstream iss(afterDiscard);
+            std::string discardContent;
+            iss >> discardContent;
+
+            discardContentNode = std::make_unique<StringNode>(std::move(std::string(discardContent)));
+
+        } else {
+            std::cout << "'Error: discard' not found in Discard node." << std::endl;
+            return nullptr;
+        }
+
+        size_t fromPos = discardNode->value.find("from");
+
+        if (fromPos != std::string::npos) {
+            std::string afterFrom = discardNode->value.substr(fromPos + 5);
+
+            std::istringstream iss(afterFrom);
+            std::string discardTarget;
+            iss >> discardTarget;
+
+            discardTargetNode = std::make_unique<StringNode>(std::move(std::string(discardTarget)));
+        } 
+
+        else {
+            std::cout << "Error: 'from' not found in Discard node." << std::endl;
+            return nullptr;
+        }
+
+        return std::make_unique<DiscardNode>(std::move(discardContentNode), std::move(discardTargetNode));
+    }
+    std::cerr << "Error: Discard node not found." << std::endl;
+    return nullptr;
+}
+
+std::unique_ptr<Visitor::ExpressionNode> 
+Visitor::Parser::visitExpression(const ts::Node &node) {
+    ts::Cursor cursor = node.getCursor();
+    if (cursor.gotoFirstChild()) {
+        do {
+            ts::Node expressionKid = cursor.getCurrentNode();    
+            std::cout << expressionKid.getType() << " " << expressionKid.getSymbol() << std::endl << std::endl;
+            //TODO: handle "builtin" and "argument_list" nodes. the entire expression is already in a string form.
+            if (expressionKid.getSymbol() == 121) { //builtin
+
+            }
+            if (expressionKid.getSymbol() == 122) { //argument_list
+
+            }
+        } while (cursor.gotoNextSibling());
+    }
+    std::unique_ptr<StringNode> newStringNode = visitString(node);
+    std::cout << "loop expression: " << newStringNode->value << std::endl;
+    return std::make_unique<ExpressionNode>(std::move(newStringNode));
+}
+
 void processRuleBodyType(const ts::Node &ruleBodyNode) {
     ts::Node rulesType = ruleBodyNode.getChild(0);
     auto rulesTypeSymbol = rulesType.getSymbol();
@@ -606,266 +866,6 @@ void processForLoop(const ts::Node &forLoopNode) {
         }
         } while (forLoopCursor.gotoNextSibling());
     }
-}
-
-//body is the field of rules; rule is child of body
-std::unique_ptr<Visitor::BodyNode>
-Visitor::Parser::visitRulesBody(const ts::Node &node) {
-    ts::Cursor cursor = node.getCursor();
-    std::vector<ts::Node> gameRules;
-    
-    if (cursor.gotoFirstChild()) {
-        do {
-            ts::Node child = cursor.getCurrentNode();
-            std::cout << child.getType() << " " << child.getSymbol() << std::endl;
-            // if a rule is found, add to the body by getting the child
-            if (child.getSymbol() == 99) {
-                std::cout << "rule found" << std::endl;
-                std::cout << child.getChild(0).getType() << " " << child.getChild(0).getSymbol() << std::endl;
-                gameRules.push_back(child);
-                ts::Node ruleTypeNode = child.getChild(0);
-                if (ruleTypeNode.getSymbol() == 100) {
-                    ts::Node identifierNode = ruleTypeNode.getChild(1);
-                    ts::Node expressionNode = ruleTypeNode.getChild(3);
-                    processForLoop(ruleTypeNode);
-                    visitIdentifier(identifierNode);
-                    visitExpression(expressionNode);
-                }
-            }
-        } while (cursor.gotoNextSibling());
-    }
-    std::cout << "nodes going into a body node:" << std::endl;
-    for (auto node : gameRules) {
-        std::cout << node.getType() << " " << node.getSymbol() << std::endl;
-    }
-    return std::make_unique<BodyNode>(gameRules);
-}
-
-std::unique_ptr<Visitor::GameRuleNode> 
-Visitor::Parser::visitGameRule(const ts::Node &node) {
-    //TODO: add more.
-    return std::make_unique<GameRuleNode>();
-}
-
-std::unique_ptr<Visitor::SetupRuleNode>
-Visitor::Parser::visitSetupRule(const ts::Node &node) {
-    // How to: handle field
-    std::unique_ptr<StringNode> kind =
-        visitString(node.getChildByFieldName("kind"));
-    std::unique_ptr<StringNode> prompt =
-        visitString(node.getChildByFieldName("prompt"));
-
-    // How-To: handle optional types
-    auto rangeChild = node.getChildByFieldName("range");
-    auto choicesChild = node.getChildByFieldName("choices");
-    auto defaultChild = node.getChildByFieldName("default");
-
-    std::unique_ptr<RangeNode> range = rangeChild.isNull() ? nullptr : visitRange(rangeChild);
-    auto choices = choicesChild.isNull() ? nullptr : visit(choicesChild);
-    auto defaultValue = defaultChild.isNull() ? nullptr : visit(defaultChild);
-
-    return std::make_unique<SetupRuleNode>(
-            std::move(kind),
-            std::move(prompt),
-            std::move(range),
-            std::move(choices),
-            std::move(defaultValue));
-}
-
-std::unique_ptr<Visitor::ValueMapNode>
-Visitor::Parser::visitValueMap(const ts::Node &node) {
-    ts::Cursor cursor = node.getCursor();
-    std::map<std::unique_ptr<StringNode>, std::unique_ptr<StringNode>> values;
-    if (cursor.gotoFirstChild()) {
-        do {
-            ts::Node child = cursor.getCurrentNode();
-            std::cout << child.getType() << child.getSymbol() << std::endl << std::endl;
-            if (child.getSymbol() == 127) {
-
-                const ts::Node key = child.getChildByFieldName("key");
-                std::unique_ptr<StringNode> identifier = visitString(key);
-
-                const ts::Node value = child.getChildByFieldName("value");
-                std::unique_ptr<StringNode> expression = visitString(value);
-
-                values.insert(std::make_pair(std::move(identifier), std::move(expression)));
-
-                // // temp loop used to print for debugging
-                // for(auto it = values.cbegin(); it != values.cend(); ++it) {
-                //     std::cout << it->second->value << "\n";
-                // }
-            }
-        } while (cursor.gotoNextSibling());
-    }
-    return std::make_unique<ValueMapNode>(std::move(values));
-}
-
-std::unique_ptr<Visitor::StringNode>
-Visitor::Parser::visitString(const ts::Node &node) {
-    std::string value = std::string(node.getSourceRange(source));
-    return std::make_unique<StringNode>(value);
-}
-
-std::unique_ptr<Visitor::BooleanNode>
-Visitor::Parser::visitBoolean(const ts::Node &node) {
-    std::string value = std::string(node.getSourceRange(source));
-    return std::make_unique<BooleanNode>(value == "true");
-}
-
-std::unique_ptr<Visitor::RangeNode>
-Visitor::Parser::visitRange(const ts::Node &node) {
-    std::string first = std::string(node.getChild(1).getSourceRange(source));
-    std::string second = std::string(node.getChild(3).getSourceRange(source));
-    return std::make_unique<RangeNode>(std::pair<int, int>(std::stoi(first), std::stoi(second)));
-}
-
-std::unique_ptr<Visitor::IdentifierNode> 
-Visitor::Parser::visitIdentifier(const ts::Node &node) {
-    std::unique_ptr<StringNode> newStringNode = visitString(node);
-    std::cout << "loop identifier: " << newStringNode->value << std::endl;
-    return std::make_unique<IdentifierNode>(std::move(newStringNode));
-}
-
-// recursively traverse through the rule tree to find message statements
-std::unique_ptr<Visitor::StringNode> 
-Visitor::Parser::findNode(const ts::Node &node, std::string keyword) {
-    for(int i = 0; i < node.getNumChildren(); i++) {
-        std::string currWord = std::string(node.getChild(i).getSourceRange(source));
-
-        // Check if currWord is not empty before extracting the first word
-        if (!currWord.empty()) {
-            std::string firstWord;
-            std::istringstream(currWord) >> firstWord;
-
-            if(firstWord == keyword) {
-                // std::cout << "found message! " << currWord << '\n';
-                std::unique_ptr<StringNode> stringNode = std::make_unique<StringNode>(std::move(std::string(currWord)));
-                return stringNode;
-            }
-        }
-
-        auto result = findNode(node.getChild(i), keyword);
-        if(result) {
-            return result;
-        }
-    }
-    return nullptr;
-}
-
-std::unique_ptr<Visitor::MessageNode> 
-Visitor::Parser::visitMessage(const ts::Node &node) {
-    std::unique_ptr<StringNode> messageContentNode;
-    std::unique_ptr<StringNode> recipentsNode;
-    ts::Cursor cursor = node.getCursor();
-
-    std::unique_ptr<StringNode> messageNode = findNode(node, "message");
-    if (messageNode) {
-        size_t messagePos = messageNode->value.find("message");
-
-        messagePos += 7; // length of "message"
-        size_t start = messageNode->value.find_first_not_of(" ", messagePos);
-        size_t end = messageNode->value.find(' ', start);
-
-        if (start != std::string::npos && end != std::string::npos) {
-            std::string recipents = messageNode->value.substr(start, end - start);
-            recipentsNode = std::make_unique<StringNode>(std::move(std::string(recipents)));
-        } 
-        
-        else {
-            std::cerr << "Error: recipients not found in message node." << std::endl;
-            return nullptr;
-        }
-
-        size_t quoteStart = messageNode->value.find("\"");
-        size_t quoteEnd = messageNode->value.find("\"", quoteStart + 1);
-
-        if (quoteStart != std::string::npos && quoteEnd != std::string::npos) {
-            std::string msg = messageNode->value.substr(quoteStart + 1, quoteEnd - quoteStart - 1);
-            messageContentNode = std::make_unique<StringNode>(std::move(std::string(msg)));
-        } 
-        
-        else {
-            std::cerr << "Error: message content not found in message node." << std::endl;
-            return nullptr;
-        }
-
-        return std::make_unique<MessageNode>(std::move(messageContentNode), std::move(recipentsNode));
-    }
-
-    std::cerr << "Error: Message node not found." << std::endl;
-    return nullptr;
-}
-
-
-std::unique_ptr<Visitor::DiscardNode> 
-Visitor::Parser::visitDiscard(const ts::Node &node) {
-    std::unique_ptr<StringNode> discardContentNode;
-    std::unique_ptr<StringNode> discardTargetNode;
-    ts::Cursor cursor = node.getCursor();
-
-    std::unique_ptr<StringNode> discardNode = findNode(node, "discard");
-
-    if(discardNode) {
-        // std::cout << "discard content: " << discardNode->value << std::endl;
-
-        size_t discardPos = discardNode->value.find("discard");
-
-        if (discardPos != std::string::npos) {
-            std::string afterDiscard = discardNode->value.substr(discardPos + 8);
-
-            std::istringstream iss(afterDiscard);
-            std::string discardContent;
-            iss >> discardContent;
-
-            discardContentNode = std::make_unique<StringNode>(std::move(std::string(discardContent)));
-
-        } else {
-            std::cout << "'Error: discard' not found in Discard node." << std::endl;
-            return nullptr;
-        }
-
-        size_t fromPos = discardNode->value.find("from");
-
-        if (fromPos != std::string::npos) {
-            std::string afterFrom = discardNode->value.substr(fromPos + 5);
-
-            std::istringstream iss(afterFrom);
-            std::string discardTarget;
-            iss >> discardTarget;
-
-            discardTargetNode = std::make_unique<StringNode>(std::move(std::string(discardTarget)));
-        } 
-
-        else {
-            std::cout << "Error: 'from' not found in Discard node." << std::endl;
-            return nullptr;
-        }
-
-        return std::make_unique<DiscardNode>(std::move(discardContentNode), std::move(discardTargetNode));
-    }
-    std::cerr << "Error: Discard node not found." << std::endl;
-    return nullptr;
-}
-
-std::unique_ptr<Visitor::ExpressionNode> 
-Visitor::Parser::visitExpression(const ts::Node &node) {
-    ts::Cursor cursor = node.getCursor();
-    if (cursor.gotoFirstChild()) {
-        do {
-            ts::Node expressionKid = cursor.getCurrentNode();    
-            std::cout << expressionKid.getType() << " " << expressionKid.getSymbol() << std::endl << std::endl;
-            //TODO: handle "builtin" and "argument_list" nodes. the entire expression is already in a string form.
-            if (expressionKid.getSymbol() == 121) { //builtin
-
-            }
-            if (expressionKid.getSymbol() == 122) { //argument_list
-
-            }
-        } while (cursor.gotoNextSibling());
-    }
-    std::unique_ptr<StringNode> newStringNode = visitString(node);
-    std::cout << "loop expression: " << newStringNode->value << std::endl;
-    return std::make_unique<ExpressionNode>(std::move(newStringNode));
 }
 
 int main(int argc, char *argv[]) {
