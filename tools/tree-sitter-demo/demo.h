@@ -13,10 +13,23 @@ TSLanguage* tree_sitter_socialgaming();
 
 std::string loadFile(const std::string &filename);
 
-//TODO: add all helper function forward declarations
-void processForLoop(const ts::Node &forLoopNode);
+void processRuleBodyType(const ts::Node &ruleBodyNode);
+
+void processDiscard(const ts::Node &discardNode);
+void processMessage(const ts::Node &messageNode);
+void processParallelFor(const ts::Node &parallelNode);
+void processMatch(const ts::Node &matchNode);
 void processMatchEntry(const ts::Node &matchEntryNode);
+void processScore(const ts::Node &scoreNode);
+void processExtend(const ts::Node &extendNode);
+void processAssignment(const ts::Node &assignmentNode);
+void processSort(const ts::Node &sortNode);
+void processDeal(const ts::Node &dealNode);
+void processTimer(const ts::Node &timerNode);
+void processReverse(const ts::Node &reverseNode);
+void processShuffle(const ts::Node &shuffleNode);
 void processRulesBody(const ts::Node &rulesBodyNode);
+void processForLoop(const ts::Node &forLoopNode);
 
 namespace Visitor {
     struct Visitor;
