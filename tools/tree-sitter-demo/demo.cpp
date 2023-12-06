@@ -326,13 +326,54 @@ Visitor::Parser::visitRules(const ts::Node &node) {
     return ruleSetNode;
 }
 
-// Helper Functions for visitRulesBody
-// void printNodes(const std::vector<ts::Node> &nodes) {
-//     std::cout << "nodes going into a body node:" << std::endl;
-//     for (const auto &node : nodes) {
-//         std::cout << node.getType() << " " << node.getSymbol() << std::endl;
-//     }
-// }
+void processRuleBodyType(const ts::Node &ruleBodyNode) {
+    ts::Node rulesType = ruleBodyNode.getChild(0);
+    auto rulesTypeSymbol = rulesType.getSymbol();
+
+    switch (rulesTypeSymbol) {
+        case 111:
+            processDiscard(rulesType);
+            break;
+        case 118:
+            processMessage(rulesType);
+            break;
+        case 102:
+            processParallelFor(rulesType);
+            break;
+        case 100:
+            processForLoop(rulesType);
+            break;
+        case 119:
+            processScore(rulesType);
+            break;
+        case 104:
+            processMatch(rulesType);
+            break;
+        case 106:
+            processExtend(rulesType);
+            break;
+        case 112:
+            processAssignment(rulesType);
+            break;
+        case 109:
+            processSort(rulesType);
+            break;
+        case 110:
+            processDeal(rulesType);
+            break;
+        case 113:
+            processTimer(rulesType);
+            break;
+        case 107:
+            processReverse(rulesType);
+            break;
+        case 108:
+            processShuffle(rulesType);
+            break;
+        default:
+            break;
+    }
+}
 
 //TODO: handle the expression node (child idx 1) and the qualified identifier (child idx 3) - amos
 void processDiscard(const ts::Node &discardNode) {
@@ -346,17 +387,6 @@ void processDiscard(const ts::Node &discardNode) {
     } while (discardCursor.gotoNextSibling());
 }
 
-//TODO: handle the player_set node (child idx 1) and qualified identifier (child idx 2) -amos
-// void processMessage(const ts::Node &messageNode) {
-//     ts::Cursor messageCursor = messageNode.getCursor();
-//     do {
-//         ts::Node messageKid = messageCursor.getCurrentNode();
-//         std::cout << "  " << messageKid.getChild(0).getType() << " " << messageKid.getChild(0).getSymbol() << std::endl << std::endl;
-//         std::cout << "  " << messageKid.getChild(1).getType() << " " << messageKid.getChild(1).getSymbol() << std::endl << std::endl;
-//         std::cout << "  " << messageKid.getChild(2).getType() << " " << messageKid.getChild(2).getSymbol() << std::endl << std::endl;
-//     } while (messageCursor.gotoNextSibling());
-// }
-
 void processMessage(const ts::Node &messageNode) {
     ts::Cursor messageCursor = messageNode.getCursor();
     std::unique_ptr<Visitor::StringNode> messageContentNode;
@@ -368,7 +398,7 @@ void processMessage(const ts::Node &messageNode) {
 
             if (messageKid.getSymbol() == 130) { // Sym player set
                 
-            } else if (messageKid.getSymbol() == 120){ // Sym expression
+            } else if (messageKid.getSymbol() == 120) { // Sym expression
 
             }
 
@@ -544,55 +574,6 @@ void processShuffle(const ts::Node &shuffleNode) {
                 // TODO: Handle qualified identifier
             }
         } while (shuffleCursor.gotoNextSibling());
-    }
-}
-
-void processRuleBodyType(const ts::Node &ruleBodyNode) {
-    ts::Node rulesType = ruleBodyNode.getChild(0);
-    auto rulesTypeSymbol = rulesType.getSymbol();
-
-    switch (rulesTypeSymbol) {
-        case 111:
-            processDiscard(rulesType);
-            break;
-        case 118:
-            processMessage(rulesType);
-            break;
-        case 102:
-            processParallelFor(rulesType);
-            break;
-        case 100:
-            processForLoop(rulesType);
-            break;
-        case 119:
-            processScore(rulesType);
-            break;
-        case 104:
-            processMatch(rulesType);
-            break;
-        case 106:
-            processExtend(rulesType);
-            break;
-        case 112:
-            processAssignment(rulesType);
-            break;
-        case 109:
-            processSort(rulesType);
-            break;
-        case 110:
-            processDeal(rulesType);
-            break;
-        case 113:
-            processTimer(rulesType);
-            break;
-        case 107:
-            processReverse(rulesType);
-            break;
-        case 108:
-            processShuffle(rulesType);
-            break;
-        default:
-            break;
     }
 }
 
