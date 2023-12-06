@@ -457,8 +457,7 @@ Visitor::Parser::findNode(const ts::Node &node, std::string keyword) {
 
             if(firstWord == keyword) {
                 // std::cout << "found message! " << currWord << '\n';
-                std::unique_ptr<StringNode> stringNode = std::make_unique<StringNode>(std::move(std::string(currWord)));
-                return stringNode;
+                return std::make_unique<StringNode>(std::move(currWord));
             }
         }
 
@@ -470,100 +469,73 @@ Visitor::Parser::findNode(const ts::Node &node, std::string keyword) {
     return nullptr;
 }
 
-std::unique_ptr<Visitor::MessageNode> 
-Visitor::Parser::visitMessage(const ts::Node &node) {
-    std::unique_ptr<StringNode> messageContentNode;
-    std::unique_ptr<StringNode> recipentsNode;
-    ts::Cursor cursor = node.getCursor();
+std::unique_ptr<Visitor::MessageNode> Visitor::Parser::visitMessage(const ts::Node &node) {
+    auto messageNode = findNode(node, "message");
+    if (!messageNode) {
+        std::cerr << "Error: 'message' node not found." << std::endl;
+        return nullptr;
+    }
 
-    std::unique_ptr<StringNode> messageNode = findNode(node, "message");
-    if (messageNode) {
-        size_t messagePos = messageNode->value.find("message");
-
-        messagePos += 7; // length of "message"
-        size_t start = messageNode->value.find_first_not_of(" ", messagePos);
+    auto extractValue = [&messageNode](size_t startTokenPos, size_t endTokenPos) -> std::unique_ptr<StringNode> {
+        size_t start = messageNode->value.find_first_not_of(" ", startTokenPos);
         size_t end = messageNode->value.find(' ', start);
 
         if (start != std::string::npos && end != std::string::npos) {
-            std::string recipents = messageNode->value.substr(start, end - start);
-            recipentsNode = std::make_unique<StringNode>(std::move(std::string(recipents)));
-        } 
-        
-        else {
-            std::cerr << "Error: recipients not found in message node." << std::endl;
-            return nullptr;
-        }
-
-        size_t quoteStart = messageNode->value.find("\"");
-        size_t quoteEnd = messageNode->value.find("\"", quoteStart + 1);
-
-        if (quoteStart != std::string::npos && quoteEnd != std::string::npos) {
-            std::string msg = messageNode->value.substr(quoteStart + 1, quoteEnd - quoteStart - 1);
-            messageContentNode = std::make_unique<StringNode>(std::move(std::string(msg)));
-        } 
-        
-        else {
-            std::cerr << "Error: message content not found in message node." << std::endl;
-            return nullptr;
-        }
-
-        return std::make_unique<MessageNode>(std::move(messageContentNode), std::move(recipentsNode));
-    }
-
-    std::cerr << "Error: Message node not found." << std::endl;
-    return nullptr;
-}
-
-
-std::unique_ptr<Visitor::DiscardNode> 
-Visitor::Parser::visitDiscard(const ts::Node &node) {
-    std::unique_ptr<StringNode> discardContentNode;
-    std::unique_ptr<StringNode> discardTargetNode;
-    ts::Cursor cursor = node.getCursor();
-
-    std::unique_ptr<StringNode> discardNode = findNode(node, "discard");
-
-    if(discardNode) {
-        // std::cout << "discard content: " << discardNode->value << std::endl;
-
-        size_t discardPos = discardNode->value.find("discard");
-
-        if (discardPos != std::string::npos) {
-            std::string afterDiscard = discardNode->value.substr(discardPos + 8);
-
-            std::istringstream iss(afterDiscard);
-            std::string discardContent;
-            iss >> discardContent;
-
-            discardContentNode = std::make_unique<StringNode>(std::move(std::string(discardContent)));
-
+            std::string content = messageNode->value.substr(start, end - start);
+            return std::make_unique<StringNode>(std::move(content));
         } else {
-            std::cout << "'Error: discard' not found in Discard node." << std::endl;
+            std::cerr << "Error: Value not found in message node." << std::endl;
             return nullptr;
         }
+    };
 
-        size_t fromPos = discardNode->value.find("from");
-
-        if (fromPos != std::string::npos) {
-            std::string afterFrom = discardNode->value.substr(fromPos + 5);
-
-            std::istringstream iss(afterFrom);
-            std::string discardTarget;
-            iss >> discardTarget;
-
-            discardTargetNode = std::make_unique<StringNode>(std::move(std::string(discardTarget)));
-        } 
-
-        else {
-            std::cout << "Error: 'from' not found in Discard node." << std::endl;
-            return nullptr;
-        }
-
-        return std::make_unique<DiscardNode>(std::move(discardContentNode), std::move(discardTargetNode));
+    auto recipentsNode = extractValue(messageNode->value.find("message") + 7, messageNode->value.size());
+    if (!recipentsNode) {
+        return nullptr;
     }
-    std::cerr << "Error: Discard node not found." << std::endl;
-    return nullptr;
+
+    auto messageContentNode = extractValue(messageNode->value.find("\""), messageNode->value.rfind("\""));
+    if (!messageContentNode) {
+        return nullptr;
+    }
+
+    return std::make_unique<MessageNode>(std::move(messageContentNode), std::move(recipentsNode));
 }
+
+std::unique_ptr<Visitor::DiscardNode> Visitor::Parser::visitDiscard(const ts::Node &node) {
+    auto discardNode = findNode(node, "discard");
+    if (!discardNode) {
+        std::cerr << "Error: 'discard' node not found." << std::endl;
+        return nullptr;
+    }
+
+    auto extractValue = [&discardNode](const std::string &token) -> std::unique_ptr<StringNode> {
+        size_t pos = discardNode->value.find(token);
+        if (pos == std::string::npos) {
+            std::cerr << "Error: '" << token << "' not found in Discard node." << std::endl;
+            return nullptr;
+        }
+
+        std::string value = discardNode->value.substr(pos + token.size());
+        std::istringstream iss(value);
+        std::string content;
+        iss >> content;
+        return std::make_unique<StringNode>(std::move(content));
+    };
+
+    auto discardContentNode = extractValue("discard");
+    if (!discardContentNode) {
+        return nullptr;
+    }
+
+    auto discardTargetNode = extractValue("from");
+    if (!discardTargetNode) {
+        return nullptr;
+    }
+
+    return std::make_unique<DiscardNode>(std::move(discardContentNode), std::move(discardTargetNode));
+}
+
 
 std::unique_ptr<Visitor::ExpressionNode> 
 Visitor::Parser::visitExpression(const ts::Node &node) {
@@ -880,6 +852,7 @@ int main(int argc, char *argv[]) {
     std::string source = loadFile(filename);
     ts::Tree tree = parser.parseString(source);
     ts::Node node = tree.getRootNode();
+
 
     Visitor::Parser vParser{language, source};
     std::unique_ptr<Visitor::Node> vNode = vParser.visit(node);
