@@ -326,307 +326,6 @@ Visitor::Parser::visitRules(const ts::Node &node) {
     return ruleSetNode;
 }
 
-// Helper Functions for visitRulesBody
-// void printNodes(const std::vector<ts::Node> &nodes) {
-//     std::cout << "nodes going into a body node:" << std::endl;
-//     for (const auto &node : nodes) {
-//         std::cout << node.getType() << " " << node.getSymbol() << std::endl;
-//     }
-// }
-
-//TODO: handle the expression node (child idx 1) and the qualified identifier (child idx 3) - amos
-void processDiscard(const ts::Node &discardNode) {
-    ts::Cursor discardCursor = discardNode.getCursor();
-     do {
-        ts::Node discardKid = discardCursor.getCurrentNode();
-        std::cout << "  " << discardKid.getChild(0).getType() << " " << discardKid.getChild(0).getSymbol() << std::endl << std::endl;
-        std::cout << "  " << discardKid.getChild(1).getType() << " " << discardKid.getChild(1).getSymbol() << std::endl << std::endl;
-        std::cout << "  " << discardKid.getChild(2).getType() << " " << discardKid.getChild(2).getSymbol() << std::endl << std::endl;
-        std::cout << "  " << discardKid.getChild(3).getType() << " " << discardKid.getChild(3).getSymbol() << std::endl << std::endl;
-    } while (discardCursor.gotoNextSibling());
-}
-
-//TODO: handle the player_set node (child idx 1) and qualified identifier (child idx 2) -amos
-// void processMessage(const ts::Node &messageNode) {
-//     ts::Cursor messageCursor = messageNode.getCursor();
-//     do {
-//         ts::Node messageKid = messageCursor.getCurrentNode();
-//         std::cout << "  " << messageKid.getChild(0).getType() << " " << messageKid.getChild(0).getSymbol() << std::endl << std::endl;
-//         std::cout << "  " << messageKid.getChild(1).getType() << " " << messageKid.getChild(1).getSymbol() << std::endl << std::endl;
-//         std::cout << "  " << messageKid.getChild(2).getType() << " " << messageKid.getChild(2).getSymbol() << std::endl << std::endl;
-//     } while (messageCursor.gotoNextSibling());
-// }
-
-void processMessage(const ts::Node &messageNode) {
-    ts::Cursor messageCursor = messageNode.getCursor();
-    std::unique_ptr<Visitor::StringNode> messageContentNode;
-
-    if (messageCursor.gotoFirstChild()) {
-        do {
-            ts::Node messageKid = messageCursor.getCurrentNode();
-            std::cout << "  " << messageKid.getType() << " " << messageKid.getSymbol() << std::endl << std::endl;
-
-            if (messageKid.getSymbol() == 130) { // Sym player set
-                
-            } else if (messageKid.getSymbol() == 120){ // Sym expression
-
-            }
-
-        } while (messageCursor.gotoNextSibling());
-    }
-}
-
-//TODO: handle parallel for (if needed - child idx 0), identifier (child idx 1), expression (3) and body (4) - jay
-void processParallelFor(const ts::Node &parallelNode) {
-    ts::Cursor parallelCursor = parallelNode.getCursor();
-    do {
-        ts::Node parallelKid = parallelCursor.getCurrentNode();
-        std::cout << "  " << parallelKid.getChild(0).getType() << " " << parallelKid.getChild(0).getSymbol() << std::endl << std::endl;
-        std::cout << "  " << parallelKid.getChild(1).getType() << " " << parallelKid.getChild(1).getSymbol() << std::endl << std::endl;
-        std::cout << "  " << parallelKid.getChild(2).getType() << " " << parallelKid.getChild(2).getSymbol() << std::endl << std::endl;
-        std::cout << "  " << parallelKid.getChild(3).getType() << " " << parallelKid.getChild(3).getSymbol() << std::endl << std::endl;
-        std::cout << "  " << parallelKid.getChild(4).getType() << " " << parallelKid.getChild(4).getSymbol() << std::endl << std::endl;
-    } while (parallelCursor.gotoNextSibling());
-}
-
-void processMatch(const ts::Node &matchNode) {
-    ts::Cursor matchCursor = matchNode.getCursor();
-    if (matchCursor.gotoFirstChild()) {
-        do {
-            ts::Node matchKid = matchCursor.getCurrentNode();
-            std::cout << "  " << matchKid.getType() << " " << matchKid.getSymbol() << std::endl << std::endl;
-            if (matchKid.getSymbol() == 120) { // expression
-                //todo: try implementing something similar to the visitExpression function in Parser class
-            } else if (matchKid.getSymbol() == 105) { //match entry (can be multiple)
-                processMatchEntry(matchKid);
-            }
-        } while (matchCursor.gotoNextSibling());
-    }
-}
-
- //helper function of the helper to get all the match entries
-void processMatchEntry(const ts::Node &matchEntryNode) {
-    ts::Cursor matchEntryCursor = matchEntryNode.getCursor();
-    if (matchEntryCursor.gotoFirstChild()) {
-        do {
-            ts::Node matchEntryKid = matchEntryCursor.getCurrentNode();
-            std::cout << "    " << matchEntryKid.getType() << " " << matchEntryKid.getSymbol() << std::endl << std::endl;
-            if (matchEntryKid.getSymbol() == 120) { // expression
-                //todo: try implementing something similar to the visitExpression function in Parser class
-            } else if (matchEntryKid.getSymbol() == 131) { // body
-                std::cout << "START MATCH ENTRY BODY" << std::endl;
-                processRulesBody(matchEntryKid);
-                std::cout << "END MATCH ENTRY BODY" << std::endl;
-            }
-        } while (matchEntryCursor.gotoNextSibling());
-    }
-}
-
-void processScore(const ts::Node &scoreNode) {
-    ts::Cursor scoreCursor = scoreNode.getCursor();
-    if (scoreCursor.gotoFirstChild()) {
-        do {
-            ts::Node scoreKid = scoreCursor.getCurrentNode();
-            std::cout << "  " << scoreKid.getType() << " " << scoreKid.getSymbol() << std::endl << std::endl;
-            if (scoreKid.getSymbol() == 126) { // List literals
-                // TODO: Handle 'keys' which is of type list_literal
-            }
-        } while (scoreCursor.gotoNextSibling());
-    }
-}
-
-void processExtend(const ts::Node &extendNode) {
-    ts::Cursor extendCursor = extendNode.getCursor();
-    if (extendCursor.gotoFirstChild()) {
-        do {
-            ts::Node extendKid = extendCursor.getCurrentNode();
-            std::cout << "  " << extendKid.getType() << " " << extendKid.getSymbol() << std::endl << std::endl;
-            if (extendKid.getSymbol() == 129) { // qualified identifier
-                // TODO: Handle qualified identifier
-            } else if (extendKid.getSymbol() == 120) { // expression
-                // TODO: Handle expression
-            }
-        } while (extendCursor.gotoNextSibling());
-    }
-}
-
-void processAssignment(const ts::Node &assignmentNode) {
-    // stub
-    ts::Cursor assignmentCursor = assignmentNode.getCursor();
-    if (assignmentCursor.gotoFirstChild()) {
-        do {
-            ts::Node assignmentKid = assignmentCursor.getCurrentNode();
-            std::cout << "  " << assignmentKid.getType() << " " << assignmentKid.getSymbol() << std::endl << std::endl;
-            if (assignmentKid.getSymbol() == 129) { // qualified identifier
-                // TODO: Handle qualified identifier
-            } else if (assignmentKid.getSymbol() == 120) { // expression
-                // TODO: Handle expression
-            }
-        } while (assignmentCursor.gotoNextSibling());
-    }
-}
-
-void processSort(const ts::Node &sortNode) {
-    ts::Cursor sortCursor = sortNode.getCursor();
-    if (sortCursor.gotoFirstChild()) {
-        do {
-            ts::Node sortKid = sortCursor.getCurrentNode();
-            std::cout << "  " << sortKid.getType() << " " << sortKid.getSymbol() << std::endl << std::endl;
-            if (sortKid.getSymbol() == 129) { // qualified identifier
-                // TODO: Handle qualified identifier
-            } else {
-                if (sortKid.getSymbol() == 120) { // OPTIONAL: Expression
-                    // TODO: Handle expression
-                }
-            }
-        } while (sortCursor.gotoNextSibling());
-    }
-}
-
-void processDeal(const ts::Node &dealNode) {
-    ts::Cursor dealCursor = dealNode.getCursor();
-    if (dealCursor.gotoFirstChild()) {
-        do {
-            ts::Node dealKid = dealCursor.getCurrentNode();
-            std::cout << "  " << dealKid.getType() << " " << dealKid.getSymbol() << std::endl << std::endl;
-            if (dealKid.getSymbol() == 129) { // qualified identifier
-                // TODO: Handle qualified identifier
-            } else if (dealKid.getSymbol() == 130) { // player_set
-                // TODO: Player Set
-            } else if (dealKid.getSymbol() == 120) {
-                // TODO: Handle expression
-            }
-        } while (dealCursor.gotoNextSibling());
-    }
-}
-
-void processTimer(const ts::Node &timerNode) {
-    ts::Cursor timerCursor = timerNode.getCursor();
-    if (timerCursor.gotoFirstChild()) {
-        do {
-            ts::Node timerKid = timerCursor.getCurrentNode();
-            std::cout << "  " << timerKid.getType() << " " << timerKid.getSymbol() << std::endl << std::endl;
-            if (timerKid.getSymbol() == 120) { // expression
-                // TODO: Handle qualified identifier
-            } else if (timerKid.getSymbol() == 131) { // sym body
-                processRulesBody(timerKid);
-            } else {    // START OPTIONAL KIDS:
-                if (timerKid.getSymbol() == 114) { // OPTIONAL: Choice field
-                    // TODO: HANDLE 'at most' and 'exactly' choices (see grammar.js line 235)
-                } else if (timerKid.getSymbol() == 129) { // OPTIONAL: Qualified identifier
-                    
-                }
-            }
-        } while (timerCursor.gotoNextSibling());
-    }
-}
-
-void processReverse(const ts::Node &reverseNode) {
-    ts::Cursor reverseCursor = reverseNode.getCursor();
-    if (reverseCursor.gotoFirstChild()) {
-        do {
-            ts::Node reverseKid = reverseCursor.getCurrentNode();
-            std::cout << "  " << reverseKid.getType() << " " << reverseKid.getSymbol() << std::endl << std::endl;
-            if (reverseKid.getSymbol() == 129) { // qualified identifier
-                // TODO: Handle qualified identifier
-            }
-        } while (reverseCursor.gotoNextSibling());
-    }
-}
-
-void processShuffle(const ts::Node &shuffleNode) {
-    ts::Cursor shuffleCursor = shuffleNode.getCursor();
-    if (shuffleCursor.gotoFirstChild()) {
-        do {
-            ts::Node shuffleKid = shuffleCursor.getCurrentNode();
-            std::cout << "  " << shuffleKid.getType() << " " << shuffleKid.getSymbol() << std::endl << std::endl;
-            if (shuffleKid.getSymbol() == 129) { // qualified identifier
-                // TODO: Handle qualified identifier
-            }
-        } while (shuffleCursor.gotoNextSibling());
-    }
-}
-
-void processRuleBodyType(const ts::Node &ruleBodyNode) {
-    ts::Node rulesType = ruleBodyNode.getChild(0);
-    auto rulesTypeSymbol = rulesType.getSymbol();
-
-    switch (rulesTypeSymbol) {
-        case 111:
-            processDiscard(rulesType);
-            break;
-        case 118:
-            processMessage(rulesType);
-            break;
-        case 102:
-            processParallelFor(rulesType);
-            break;
-        case 100:
-            processForLoop(rulesType);
-            break;
-        case 119:
-            processScore(rulesType);
-            break;
-        case 104:
-            processMatch(rulesType);
-            break;
-        case 106:
-            processExtend(rulesType);
-            break;
-        case 112:
-            processAssignment(rulesType);
-            break;
-        case 109:
-            processSort(rulesType);
-            break;
-        case 110:
-            processDeal(rulesType);
-            break;
-        case 113:
-            processTimer(rulesType);
-            break;
-        case 107:
-            processReverse(rulesType);
-            break;
-        case 108:
-            processShuffle(rulesType);
-            break;
-        default:
-            break;
-    }
-}
-
-void processRulesBody(const ts::Node &rulesBodyNode) {
-    std::cout << "loop rules body" << std::endl;
-    ts::Cursor rulesCursor = rulesBodyNode.getCursor();
-    if (rulesCursor.gotoFirstChild()) {
-        do {
-            ts::Node rulesKid = rulesCursor.getCurrentNode();
-            std::cout << rulesKid.getType() << " " << rulesKid.getSymbol() << std::endl << std::endl;
-            if (rulesKid.getSymbol() == 99) {
-                std::cout << "  " << rulesKid.getChild(0).getType() << " " << rulesKid.getChild(0).getSymbol() << std::endl << std::endl;
-                processRuleBodyType(rulesKid);
-            }
-        } while (rulesCursor.gotoNextSibling());
-        std::cout << "end for loop body" << std::endl << std::endl;
-    }
-}
-
-void processForLoop(const ts::Node &forLoopNode) {
-    std::cout << "for loop found" << std::endl;
-    ts::Cursor forLoopCursor = forLoopNode.getCursor();
-
-    if (forLoopCursor.gotoFirstChild()) { //Handles keyword, ident., in, expression, and body
-    do {
-        ts::Node forLoopKid = forLoopCursor.getCurrentNode();
-        std::cout << forLoopKid.getType() << " " << forLoopKid.getSymbol() << std::endl << std::endl;
-        if (forLoopKid.getSymbol() == 131) {
-            processRulesBody(forLoopKid);
-        }
-        } while (forLoopCursor.gotoNextSibling());
-    }
-}
-
 //body is the field of rules; rule is child of body
 std::unique_ptr<Visitor::BodyNode>
 Visitor::Parser::visitRulesBody(const ts::Node &node) {
@@ -885,6 +584,288 @@ Visitor::Parser::visitExpression(const ts::Node &node) {
     std::unique_ptr<StringNode> newStringNode = visitString(node);
     std::cout << "loop expression: " << newStringNode->value << std::endl;
     return std::make_unique<ExpressionNode>(std::move(newStringNode));
+}
+
+void processRuleBodyType(const ts::Node &ruleBodyNode) {
+    ts::Node rulesType = ruleBodyNode.getChild(0);
+    auto rulesTypeSymbol = rulesType.getSymbol();
+
+    switch (rulesTypeSymbol) {
+        case 111:
+            processDiscard(rulesType);
+            break;
+        case 118:
+            processMessage(rulesType);
+            break;
+        case 102:
+            processParallelFor(rulesType);
+            break;
+        case 104:
+            processMatch(rulesType);
+            break;
+        case 119:
+            processScore(rulesType);
+            break;
+        case 106:
+            processExtend(rulesType);
+            break;
+        case 112:
+            processAssignment(rulesType);
+            break;
+        case 109:
+            processSort(rulesType);
+            break;
+        case 110:
+            processDeal(rulesType);
+            break;
+        case 113:
+            processTimer(rulesType);
+            break;
+        case 107:
+            processReverse(rulesType);
+            break;
+        case 108:
+            processShuffle(rulesType);
+            break;
+        case 100:
+            processForLoop(rulesType);
+            break;
+        default:
+            break;
+    }
+}
+
+//TODO: handle the expression node (child idx 1) and the qualified identifier (child idx 3) - amos
+void processDiscard(const ts::Node &discardNode) {
+    ts::Cursor discardCursor = discardNode.getCursor();
+     do {
+        ts::Node discardKid = discardCursor.getCurrentNode();
+        std::cout << "  " << discardKid.getChild(0).getType() << " " << discardKid.getChild(0).getSymbol() << std::endl << std::endl;
+        std::cout << "  " << discardKid.getChild(1).getType() << " " << discardKid.getChild(1).getSymbol() << std::endl << std::endl;
+        std::cout << "  " << discardKid.getChild(2).getType() << " " << discardKid.getChild(2).getSymbol() << std::endl << std::endl;
+        std::cout << "  " << discardKid.getChild(3).getType() << " " << discardKid.getChild(3).getSymbol() << std::endl << std::endl;
+    } while (discardCursor.gotoNextSibling());
+}
+
+void processMessage(const ts::Node &messageNode) {
+    ts::Cursor messageCursor = messageNode.getCursor();
+    std::unique_ptr<Visitor::StringNode> messageContentNode;
+
+    if (messageCursor.gotoFirstChild()) {
+        do {
+            ts::Node messageKid = messageCursor.getCurrentNode();
+            std::cout << "  " << messageKid.getType() << " " << messageKid.getSymbol() << std::endl << std::endl;
+
+            if (messageKid.getSymbol() == 130) { // Sym player set
+                
+            } else if (messageKid.getSymbol() == 120) { // Sym expression
+
+            }
+
+        } while (messageCursor.gotoNextSibling());
+    }
+}
+
+//TODO: handle parallel for (if needed - child idx 0), identifier (child idx 1), expression (3) and body (4) - jay
+void processParallelFor(const ts::Node &parallelNode) {
+    ts::Cursor parallelCursor = parallelNode.getCursor();
+    do {
+        ts::Node parallelKid = parallelCursor.getCurrentNode();
+        std::cout << "  " << parallelKid.getChild(0).getType() << " " << parallelKid.getChild(0).getSymbol() << std::endl << std::endl;
+        std::cout << "  " << parallelKid.getChild(1).getType() << " " << parallelKid.getChild(1).getSymbol() << std::endl << std::endl;
+        std::cout << "  " << parallelKid.getChild(2).getType() << " " << parallelKid.getChild(2).getSymbol() << std::endl << std::endl;
+        std::cout << "  " << parallelKid.getChild(3).getType() << " " << parallelKid.getChild(3).getSymbol() << std::endl << std::endl;
+        std::cout << "  " << parallelKid.getChild(4).getType() << " " << parallelKid.getChild(4).getSymbol() << std::endl << std::endl;
+    } while (parallelCursor.gotoNextSibling());
+}
+
+void processMatch(const ts::Node &matchNode) {
+    ts::Cursor matchCursor = matchNode.getCursor();
+    if (matchCursor.gotoFirstChild()) {
+        do {
+            ts::Node matchKid = matchCursor.getCurrentNode();
+            std::cout << "  " << matchKid.getType() << " " << matchKid.getSymbol() << std::endl << std::endl;
+            if (matchKid.getSymbol() == 120) { // expression
+                //todo: try implementing something similar to the visitExpression function in Parser class
+            } else if (matchKid.getSymbol() == 105) { //match entry (can be multiple)
+                processMatchEntry(matchKid);
+            }
+        } while (matchCursor.gotoNextSibling());
+    }
+}
+
+ //helper function of the helper to get all the match entries
+void processMatchEntry(const ts::Node &matchEntryNode) {
+    ts::Cursor matchEntryCursor = matchEntryNode.getCursor();
+    if (matchEntryCursor.gotoFirstChild()) {
+        do {
+            ts::Node matchEntryKid = matchEntryCursor.getCurrentNode();
+            std::cout << "    " << matchEntryKid.getType() << " " << matchEntryKid.getSymbol() << std::endl << std::endl;
+            if (matchEntryKid.getSymbol() == 120) { // expression
+                //todo: try implementing something similar to the visitExpression function in Parser class
+            } else if (matchEntryKid.getSymbol() == 131) { // body
+                std::cout << "START MATCH ENTRY BODY" << std::endl;
+                processRulesBody(matchEntryKid);
+                std::cout << "END MATCH ENTRY BODY" << std::endl;
+            }
+        } while (matchEntryCursor.gotoNextSibling());
+    }
+}
+
+void processScore(const ts::Node &scoreNode) {
+    ts::Cursor scoreCursor = scoreNode.getCursor();
+    if (scoreCursor.gotoFirstChild()) {
+        do {
+            ts::Node scoreKid = scoreCursor.getCurrentNode();
+            std::cout << "  " << scoreKid.getType() << " " << scoreKid.getSymbol() << std::endl << std::endl;
+            if (scoreKid.getSymbol() == 126) { // List literals
+                // TODO: Handle 'keys' which is of type list_literal
+            }
+        } while (scoreCursor.gotoNextSibling());
+    }
+}
+
+void processExtend(const ts::Node &extendNode) {
+    ts::Cursor extendCursor = extendNode.getCursor();
+    if (extendCursor.gotoFirstChild()) {
+        do {
+            ts::Node extendKid = extendCursor.getCurrentNode();
+            std::cout << "  " << extendKid.getType() << " " << extendKid.getSymbol() << std::endl << std::endl;
+            if (extendKid.getSymbol() == 129) { // qualified identifier
+                // TODO: Handle qualified identifier
+            } else if (extendKid.getSymbol() == 120) { // expression
+                // TODO: Handle expression
+            }
+        } while (extendCursor.gotoNextSibling());
+    }
+}
+
+void processAssignment(const ts::Node &assignmentNode) {
+    // stub
+    ts::Cursor assignmentCursor = assignmentNode.getCursor();
+    if (assignmentCursor.gotoFirstChild()) {
+        do {
+            ts::Node assignmentKid = assignmentCursor.getCurrentNode();
+            std::cout << "  " << assignmentKid.getType() << " " << assignmentKid.getSymbol() << std::endl << std::endl;
+            if (assignmentKid.getSymbol() == 129) { // qualified identifier
+                // TODO: Handle qualified identifier
+            } else if (assignmentKid.getSymbol() == 120) { // expression
+                // TODO: Handle expression
+            }
+        } while (assignmentCursor.gotoNextSibling());
+    }
+}
+
+void processSort(const ts::Node &sortNode) {
+    ts::Cursor sortCursor = sortNode.getCursor();
+    if (sortCursor.gotoFirstChild()) {
+        do {
+            ts::Node sortKid = sortCursor.getCurrentNode();
+            std::cout << "  " << sortKid.getType() << " " << sortKid.getSymbol() << std::endl << std::endl;
+            if (sortKid.getSymbol() == 129) { // qualified identifier
+                // TODO: Handle qualified identifier
+            } else {
+                if (sortKid.getSymbol() == 120) { // OPTIONAL: Expression
+                    // TODO: Handle expression
+                }
+            }
+        } while (sortCursor.gotoNextSibling());
+    }
+}
+
+void processDeal(const ts::Node &dealNode) {
+    ts::Cursor dealCursor = dealNode.getCursor();
+    if (dealCursor.gotoFirstChild()) {
+        do {
+            ts::Node dealKid = dealCursor.getCurrentNode();
+            std::cout << "  " << dealKid.getType() << " " << dealKid.getSymbol() << std::endl << std::endl;
+            if (dealKid.getSymbol() == 129) { // qualified identifier
+                // TODO: Handle qualified identifier
+            } else if (dealKid.getSymbol() == 130) { // player_set
+                // TODO: Player Set
+            } else if (dealKid.getSymbol() == 120) {
+                // TODO: Handle expression
+            }
+        } while (dealCursor.gotoNextSibling());
+    }
+}
+
+void processTimer(const ts::Node &timerNode) {
+    ts::Cursor timerCursor = timerNode.getCursor();
+    if (timerCursor.gotoFirstChild()) {
+        do {
+            ts::Node timerKid = timerCursor.getCurrentNode();
+            std::cout << "  " << timerKid.getType() << " " << timerKid.getSymbol() << std::endl << std::endl;
+            if (timerKid.getSymbol() == 120) { // expression
+                // TODO: Handle qualified identifier
+            } else if (timerKid.getSymbol() == 131) { // sym body
+                processRulesBody(timerKid);
+            } else {    // START OPTIONAL KIDS:
+                if (timerKid.getSymbol() == 114) { // OPTIONAL: Choice field
+                    // TODO: HANDLE 'at most' and 'exactly' choices (see grammar.js line 235)
+                } else if (timerKid.getSymbol() == 129) { // OPTIONAL: Qualified identifier
+                    
+                }
+            }
+        } while (timerCursor.gotoNextSibling());
+    }
+}
+
+void processReverse(const ts::Node &reverseNode) {
+    ts::Cursor reverseCursor = reverseNode.getCursor();
+    if (reverseCursor.gotoFirstChild()) {
+        do {
+            ts::Node reverseKid = reverseCursor.getCurrentNode();
+            std::cout << "  " << reverseKid.getType() << " " << reverseKid.getSymbol() << std::endl << std::endl;
+            if (reverseKid.getSymbol() == 129) { // qualified identifier
+                // TODO: Handle qualified identifier
+            }
+        } while (reverseCursor.gotoNextSibling());
+    }
+}
+
+void processShuffle(const ts::Node &shuffleNode) {
+    ts::Cursor shuffleCursor = shuffleNode.getCursor();
+    if (shuffleCursor.gotoFirstChild()) {
+        do {
+            ts::Node shuffleKid = shuffleCursor.getCurrentNode();
+            std::cout << "  " << shuffleKid.getType() << " " << shuffleKid.getSymbol() << std::endl << std::endl;
+            if (shuffleKid.getSymbol() == 129) { // qualified identifier
+                // TODO: Handle qualified identifier
+            }
+        } while (shuffleCursor.gotoNextSibling());
+    }
+}
+
+void processRulesBody(const ts::Node &rulesBodyNode) {
+    std::cout << "loop rules body" << std::endl;
+    ts::Cursor rulesCursor = rulesBodyNode.getCursor();
+    if (rulesCursor.gotoFirstChild()) {
+        do {
+            ts::Node rulesKid = rulesCursor.getCurrentNode();
+            std::cout << rulesKid.getType() << " " << rulesKid.getSymbol() << std::endl << std::endl;
+            if (rulesKid.getSymbol() == 99) {
+                std::cout << "  " << rulesKid.getChild(0).getType() << " " << rulesKid.getChild(0).getSymbol() << std::endl << std::endl;
+                processRuleBodyType(rulesKid);
+            }
+        } while (rulesCursor.gotoNextSibling());
+        std::cout << "end for loop body" << std::endl << std::endl;
+    }
+}
+
+void processForLoop(const ts::Node &forLoopNode) {
+    std::cout << "for loop found" << std::endl;
+    ts::Cursor forLoopCursor = forLoopNode.getCursor();
+
+    if (forLoopCursor.gotoFirstChild()) { //Handles keyword, ident., in, expression, and body
+    do {
+        ts::Node forLoopKid = forLoopCursor.getCurrentNode();
+        std::cout << forLoopKid.getType() << " " << forLoopKid.getSymbol() << std::endl << std::endl;
+        if (forLoopKid.getSymbol() == 131) {
+            processRulesBody(forLoopKid);
+        }
+        } while (forLoopCursor.gotoNextSibling());
+    }
 }
 
 int main(int argc, char *argv[]) {
