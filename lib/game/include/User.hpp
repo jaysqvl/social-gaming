@@ -20,16 +20,17 @@ private:
     std::string name;
     uint32_t id;
 
-    //TODO: maybe look into element and see if there is circular dependency
-    // std::map<std::string, ElementPtr> userMap;
-    // ElementPtr element;
     UserRole role = UserRole::Audience; // Default: Audience
 
 public:
-    User(std::string name, uint32_t id);
+    User(uint32_t id);
+    // User(std::string name, uint32_t id);
     std::string getName() const;
+    // bool changeName();
     uint32_t getId() const;
+    bool operator<(const User& other) const; 
     // std::map<std::string, ElementPtr> getMap() const;
     void setRole(UserRole newRole);
     UserRole getRole() const;
+
 };

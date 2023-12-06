@@ -6,9 +6,11 @@ using networking::Server;
 using networking::Connection;
 using networking::Message;
 
+// Change - by default, the "connection" field determines the recipient of the Packet, not the sender.
+
 enum class PacketType {
-    NONE,
-    FROM,
+    // NONE,
+    // FROM,
     TO
 };
 
