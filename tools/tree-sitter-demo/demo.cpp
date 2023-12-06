@@ -340,14 +340,11 @@ void processRuleBodyType(const ts::Node &ruleBodyNode) {
         case 102:
             processParallelFor(rulesType);
             break;
-        case 100:
-            processForLoop(rulesType);
+        case 104:
+            processMatch(rulesType);
             break;
         case 119:
             processScore(rulesType);
-            break;
-        case 104:
-            processMatch(rulesType);
             break;
         case 106:
             processExtend(rulesType);
@@ -369,6 +366,9 @@ void processRuleBodyType(const ts::Node &ruleBodyNode) {
             break;
         case 108:
             processShuffle(rulesType);
+            break;
+        case 100:
+            processForLoop(rulesType);
             break;
         default:
             break;
