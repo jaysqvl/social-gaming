@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <unordered_map>
 
 // Constructor for the GeneralManager class.
 GeneralManager::GeneralManager(void) :
@@ -43,60 +44,45 @@ std::string_view FirstLine(const std::string_view &text) {
     return text.substr(0, lineBreak);
 }
 
+// This function parses a command from a string_view and stores its elements in a vector.
+// It splits the input text by spaces and stores the resulting substrings in the 'elems' vector.
 void ParseCommand(std::vector<std::string_view> &elems, const std::string_view &text) {
-    std::istringstream iss(text.data() + 1); // Skip the first character '/'
-    std::string token;
-    while (iss >> token) {
-        elems.push_back(token);
-    }
+    std::istringstream iss(text.substr(1).data());
+    std::copy(std::istream_iterator<std::string>(iss), std::istream_iterator<std::string>(), std::back_inserter(elems));
 }
 
-#include <functional>
-#include <unordered_map>
-
-using CommandFunction = std::function<void(Server&, const std::deque<Packet>&, const std::deque<Message>&, const std::vector<std::string_view>&)>;
-
-// Define a map between command strings and their corresponding functions
-std::unordered_map<std::string_view, CommandFunction> commandMap = {
-    {"quit", [](Server& server, const std::deque<Packet>& outgoing, const std::deque<Message>& incoming, const std::vector<std::string_view>& elems) {
-        server.disconnect(incoming.front().connection);
-    }},
-    {"shutdown", [](Server& server, const std::deque<Packet>& outgoing, const std::deque<Message>& incoming, const std::vector<std::string_view>& elems) {
-        std::cout << "GeneralManager::Shutdown" << std::endl;
-        // Set the 'quit' flag to true or perform any necessary shutdown actions
-        // quit = true;
-    }},
-    {"join", [](Server& server, const std::deque<Packet>& outgoing, const std::deque<Message>& incoming, const std::vector<std::string_view>& elems) {
-        if (elems.size() >= 2) {
-            std::cout << "GeneralManager::Join " << incoming.front().connection.id << " " << elems[1] << std::endl;
-            // Update the room information
-            // info[incoming.front().connection.id].room = std::string(elems[1]);
-        }
-    }},
-    {"changename", [](Server& server, const std::deque<Packet>& outgoing, const std::deque<Message>& incoming, const std::vector<std::string_view>& elems) {
-        if (elems.size() >= 2) {
-            std::cout << "GeneralManager::ChangeName " << incoming.front().connection.id << " => " << elems[1] << std::endl;
-            // Update the username
-            // info[incoming.front().connection.id].username = std::string(elems[1]);
-        }
-    }}
-};
-
+// This function processes incoming messages from clients.
+// It checks for commands and processes them or forwards regular messages to other clients.
 void GeneralManager::processMessages(Server &server, std::deque<Packet> &outgoing, const std::deque<Message>& incoming) {
+    std::unordered_map<std::string_view, std::function<void(const Message&)>> commandActions = {
+        {"quit", [&](const Message& message) { server.disconnect(message.connection); }},
+        {"shutdown", [&](const Message&) { std::cout << "GeneralManager::Shutdown" << std::endl; quit = true; }},
+        {"join", [&](const Message& message) {
+            auto& room = info[message.connection.id].room;
+            if (message.text.size() >= 7) { // Ensuring command has enough characters (including '/join ')
+                room = std::string(message.text.substr(6)); // Extract room name
+                std::cout << "GeneralManager::Join " << message.connection.id << " " << room << std::endl;
+            }
+        }},
+        {"changename", [&](const Message& message) {
+            auto& username = info[message.connection.id].username;
+            if (message.text.size() >= 13) { // Ensuring command has enough characters (including '/changename ')
+                username = std::string(message.text.substr(12)); // Extract username
+                std::cout << "GeneralManager::ChangeName " << message.connection.id << " => " << username << std::endl;
+            }
+        }},
+    };
+
     for (const auto& message : incoming) {
         if (message.text[0] == '/') {
             std::vector<std::string_view> elems;
-            ParseCommand(elems, FirstLine(message.text)); // Extract command and its arguments
-            const auto& command = elems[0]; // The command itself
+            ParseCommand(elems, FirstLine(message.text));
+            const auto& command = elems[0];
 
-            // Look for the command in the map and execute the associated function
-            auto it = commandMap.find(command);
-            if (it != commandMap.end()) {
-                // Pass necessary arguments to the command function
-                it->second(server, outgoing, incoming, elems);
+            if (commandActions.find(command) != commandActions.end()) {
+                commandActions[command](message);
             }
         } else if (!FirstLine(message.text).empty()) {
-            // Process regular messages and construct outgoing messages
             const auto &id = message.connection.id;
             const auto &name = info[id].username;
 
@@ -106,7 +92,6 @@ void GeneralManager::processMessages(Server &server, std::deque<Packet> &outgoin
         }
     }
 }
-
 
 // This function builds outgoing messages for clients in the same room as the sender.
 void GeneralManager::buildOutgoing(std::deque<Message> &outgoing, const Packet &packet) {
