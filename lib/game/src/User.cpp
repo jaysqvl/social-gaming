@@ -1,10 +1,21 @@
 #include "User.hpp"
 #include <string>
 
-User::User(std::string name, uint32_t id) : name(name), id(id){};
+// User::User(std::string name, uint32_t id) : name(name), id(id){};
+
+// TODO - fix back to normal ID
+User::User(uint32_t id) : id(id), name("User " + std::to_string(id)) {};
 
 std::string User::getName() const {
     return name;
+}
+
+void User::setName(const std::string& newName){
+    name = newName;
+}
+
+bool User::operator<(const User& other) const {
+    return id < other.getId();
 }
 
 uint32_t User::getId() const {

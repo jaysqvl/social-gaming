@@ -27,6 +27,11 @@ void Visitor::Printer::operator()(const Visitor::Integer &integer) {
     printNewline();
 }
 
+void Visitor::Printer::operator()(const Visitor::Double& floating) {
+    std::cout << "Double {" << floating.value << "}";
+    printNewline();
+}
+
 void Visitor::Printer::operator()(const Visitor::Boolean &boolean) {
     std::cout << "Boolean{" << (boolean.value ? "true" : "false") << "}";
     printNewline();
