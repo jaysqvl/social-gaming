@@ -99,7 +99,6 @@ bool GameManager::hasPlayer(std::string name) {
 
 // check if a given connection exists in this game
 bool GameManager::hasConnection(const Connection& conn) {
-    
     auto it = std::find_if(playerMap.get()->begin(), playerMap.get()->end(),
                            [conn](const std::pair<const User, Connection>& pair) {
                                return pair.second == conn;
@@ -108,6 +107,22 @@ bool GameManager::hasConnection(const Connection& conn) {
     // Check if the User object was found
     if (it != playerMap->end()) {
         // Remove the User-Connection pair from the map
+        return true;
+    } 
+    return false;
+}
+
+// Remove a connection. Returns true if removed successfully
+bool GameManager::removeConnection(const Connection& conn) {
+    auto it = std::find_if(playerMap.get()->begin(), playerMap.get()->end(),
+                           [conn](const std::pair<const User, Connection>& pair) {
+                               return pair.second == conn;
+                           });
+
+    // Check if the User object was found
+    if (it != playerMap->end()) {
+        // Remove the User-Connection pair from the map
+        playerMap->erase(it);
         return true;
     } 
     return false;
