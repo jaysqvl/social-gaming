@@ -29,6 +29,8 @@ public:
 
     std::vector<Connection> getOpponents(const Connection& conn);
     std::string getUsername(const Connection& conn);
+    bool changeUsername(const std::string& name, const Connection& conn);
+
 
 private:
     std::vector<Connection> clients;
