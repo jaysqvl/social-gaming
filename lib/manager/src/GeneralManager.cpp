@@ -86,6 +86,15 @@ std::string GeneralManager::getUsername(const Connection& conn){
     return "Null";
 }
 
+bool GeneralManager::changeUsername(const std::string& name, const Connection& conn){
+    for (auto& game : gm){
+        if (game->hasConnection(conn)){
+            return game->changePlayerName(conn, name);
+        }
+    }
+    return false;
+}
+
 // This function parses a command from a string_view and stores its elements in a vector.
 // It splits the input text by spaces and stores the resulting substrings in the 'elems' vector.
 // The updated version was not working.
@@ -171,9 +180,11 @@ void GeneralManager::processMessages(Server &server, std::deque<Packet> &outgoin
                 auto userConnection = getSender(message);
                 joinGame(std::string(elems[1]), userConnection);
 
-            // TODO - this doesn't work.
             } else if (command == "changename" && elems.size() >= 2) {
-                // Handle the 'changename' command by updating the username
+
+                auto userConnection = getSender(message);
+                changeUsername(std::string(elems[1]), userConnection);
+
                 std::cout << "GeneralManager::ChangeName " << message.connection.id << " => " << elems[1] << std::endl;
             }
 
@@ -211,9 +222,6 @@ void GeneralManager::processMessages(Server &server, std::deque<Packet> &outgoin
         outgoing.insert(outgoing.end(), gameSystemMessages.begin(), gameSystemMessages.end());
     }
 
-    // after processing all incoming user messages, go through each game in the system and retrieve the 
-    // system messages it needs to send.
-
 }
 
 // // This function builds outgoing messages for clients in the same room as the sender.
@@ -222,14 +230,6 @@ void GeneralManager::buildOutgoing(std::deque<Message> &outgoing, const Packet &
     // look at the packet, retrieve the recipient, create a message, and send it to them.
     outgoing.push_back({packet.connection, packet.text});
 
-    // Use a range-based for loop to iterate over the 'clients' vector
-    // for (auto& client : clients) {
-    //     // Check if the client is in the same room as the sender
-    //     if (info[client.id].room == room) {
-    //         // If so, add the message to the 'outgoing' queue for that client
-    //         outgoing.push_back({client, packet.text});
-    //     }
-    // }
 }
 
 

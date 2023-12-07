@@ -10,6 +10,10 @@ std::string User::getName() const {
     return name;
 }
 
+void User::setName(const std::string& newName){
+    name = newName;
+}
+
 bool User::operator<(const User& other) const {
     return id < other.getId();
 }

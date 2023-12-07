@@ -56,6 +56,7 @@ public:
     GameManager(std::string_view name, Connection& conn);
     bool addPlayer(Connection& conn);
     bool removePlayer(std::string name);
+    bool changePlayerName(const Connection& conn, const std::string& newName);
     bool hasPlayer(std::string name);
     bool removeConnection(const Connection& conn);
     bool hasConnection(const Connection& conn); 

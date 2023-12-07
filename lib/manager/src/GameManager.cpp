@@ -65,6 +65,25 @@ bool GameManager::addPlayer(Connection& conn) {
     return false; // Return false if the player limit has been reached
 }
 
+
+bool GameManager::changePlayerName(const Connection& conn, const std::string& newName) {
+
+    auto it = std::find_if(playerMap.get()->begin(), playerMap.get()->end(),
+                        [conn](const std::pair<const User, Connection>& pair) {
+                            return pair.second == conn;
+                        });
+
+    // Check if the User object was found
+    if (it != playerMap->end()) {
+        // Change the username
+        // this is sketchy, but it works.
+        auto& user = const_cast<User&>(it->first);
+        user.setName(newName);
+        return true;
+    } 
+    return false;
+}
+
 // Remove a player with the given name. Returns true if removed successfully
 bool GameManager::removePlayer(std::string name) {
     auto it = std::find_if(playerMap.get()->begin(), playerMap.get()->end(),

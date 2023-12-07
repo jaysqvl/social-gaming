@@ -26,7 +26,7 @@ public:
     User(uint32_t id);
     // User(std::string name, uint32_t id);
     std::string getName() const;
-    // bool changeName();
+    void setName(const std::string& newName);
     uint32_t getId() const;
     bool operator<(const User& other) const; 
     // std::map<std::string, ElementPtr> getMap() const;
