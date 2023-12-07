@@ -57,6 +57,7 @@ public:
     bool addPlayer(Connection& conn);
     bool removePlayer(std::string name);
     bool hasPlayer(std::string name);
+    bool removeConnection(const Connection& conn);
     bool hasConnection(const Connection& conn); 
 
     std::string getGameName() const;
