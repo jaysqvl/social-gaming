@@ -78,7 +78,11 @@ int main(int argc, char* argv[]) {
     std::deque<Message> outgoing;
 
     // Process incoming messages and build outgoing messages
+
+    // this function collects all user input that came in and does things with it as required (creates rooms, sends messages, joins rooms, etc.)
     gm.processMessages(server, processed, incoming);
+
+    // this function processes that 
     for (auto &packet : processed) {
         gm.buildOutgoing(outgoing, packet);
     }

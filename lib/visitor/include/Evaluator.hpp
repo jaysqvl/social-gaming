@@ -4,14 +4,17 @@
 
 namespace Visitor {
 
-class Printer {
+class Evaluator {
 public:
-    Printer();
+
+// a set containing all the constants
+
+    Evaluator();
+    
     void printDepth();
     void printNewline();
     void operator()(const None &none);
     void operator()(const Integer &integer);
-    void operator()(const Double& floating);
     void operator()(const Boolean &boolean);
     void operator()(const String &string);
     void operator()(const Identifier &identifier);
